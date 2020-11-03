@@ -23,7 +23,7 @@ export class AssetsService {
 
     constructor() {
         this.contractAddress = Config.contractAddress;
-        this.abiPath = Config.abiPath;
+        this.abiPath = Config.abiPath;        
         this.abi = JSON.parse(fs.readFileSync(path.resolve(this.abiPath), 'utf8'));
         this.web3 = new Web3(Config.web3URL);
         this.web3.eth.handleRevert = true;

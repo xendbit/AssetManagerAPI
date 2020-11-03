@@ -1,9 +1,9 @@
 export class Config {
-    public static readonly web3URL = 'http://127.0.0.1:8545';
+    public static readonly web3URL = 'http://209.250.234.75:8545';
     public static readonly dtslAddress = '0x94Ce615ca10EFb74cED680298CD7bdB0479940bc';
-    public static readonly contractor = '0xB6D80F6d661927afEf42f39e52d630E250696bc4';
-    public static readonly contractAddress = '0x85fee11ec6e6e0D7fE4FFeC1f2bEaC6973460fCc';
-    public static readonly abiPath = '/etc/assetmanager/AssetManager.json';
+    public static readonly contractor = '0x9e8e11B145403dc6Cb3e002d90f0d715817aE323';
+    public static readonly contractAddress = '0x37aE6EBFE55c6436F501853a4EA7Ecf5bFc6c1C8';
+    public static readonly abiPath = '/Users/aardvocate/src/AssetManager/build/contracts/AssetManager.json';
     public static readonly gas = '4004356';     
 
     public static generatePassword(passwordLength) {

@@ -1,7 +1,7 @@
 import { User } from './../models/user.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { AES } from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import Web3 from 'web3';
 import { Config } from './../models/config';
 import { Repository } from 'typeorm';
@@ -19,6 +19,11 @@ export class UserService {
     async getNewAddress(userId: number) {
         let dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [userId]);
         if(dbUser.length === 1) {
+            // const password = AES.decrypt(dbUser[0].password, 'tfyscanf').toString(enc.Utf8);
+            // const pk = AES.decrypt(dbUser[0].privateKey, 'tfyscanf').toString(enc.Utf8);
+            // console.log(password);
+            // console.log(pk);
+            // this.web3.eth.personal.importRawKey(pk.replace('0x', ''), password);
             return dbUser[0];
         }
 
