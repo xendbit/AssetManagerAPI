@@ -7,7 +7,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'debug', 'log', 'verbose'],
+  });
   app.useGlobalInterceptors(new LoggerInterceptor());  
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new ExceptionsFilter());
@@ -17,12 +19,17 @@ async function bootstrap() {
       .setDescription('API endpoints for Xend Assset Management and Order Matching Platform')
       .setVersion('1.0.0')
       .addTag('asset-manager')
+      .addApiKey({
+        type: 'apiKey', // this should be apiKey
+        name: 'api-key', // this is the name of the key you expect in header
+        in: 'header',
+      }, 'access-key') 
       .build();
   
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
-  
-  await app.listen(8080);
+
+  await app.listen(process.env.PORT);
 }
 
 bootstrap();

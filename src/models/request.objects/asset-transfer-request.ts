@@ -17,4 +17,8 @@ export class AssetTransferRequest {
     @IsNumber()
     @ApiProperty()
     public quantity: number;
+    @IsNumber()
+    @ApiProperty()
+    public price: number;
+
 }

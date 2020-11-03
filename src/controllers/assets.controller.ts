@@ -1,3 +1,4 @@
+import { ApiSecurity } from '@nestjs/swagger';
 import { AssetTransferRequest } from '../models/request.objects/asset-transfer-request';
 import { NewAssetRequest } from '../models/request.objects/new-asset-request';
 import { AssetsService } from '../services/assets.service';
@@ -16,13 +17,15 @@ export class AssetsController {
     }
 
     @Post()
-    @Roles('all')
+    @Roles('admin')
+    @ApiSecurity('access-key')
     createNewAsset(@Body() asset: NewAssetRequest): Promise<Asset> {
         return this.assetsService.createAsset(asset);
     }
 
     @Post('/transfer')
-    @Roles('all')
+    @Roles('admin')
+    @ApiSecurity('access-key')
     transferAssset(@Body() assetTranfer: AssetTransferRequest): Promise<Asset> {
         return this.assetsService.transferAsset(assetTranfer);
     }

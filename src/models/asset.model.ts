@@ -10,6 +10,8 @@ export class Asset {
     @ApiProperty()
     public totalQuantity: number;
     @ApiProperty()
+    public price: number;
+    @ApiProperty()
     public quantity: number;
     @ApiProperty()
     public decimal: number;
@@ -24,6 +26,7 @@ export class Asset {
             name: res.name,
             description: res.description,
             totalQuantity: res.totalQuantity,
+            price: res.price,
             quantity: res.quantity,
             decimal: res.decimal,
             issuer: res.issuer,

@@ -7,9 +7,11 @@ import { Module } from '@nestjs/common';
 import { AssetsService } from './services/assets.service';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'AssetManager.db',

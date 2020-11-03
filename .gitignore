@@ -2,3 +2,4 @@ package-lock.json
 AssetManager.db
 node_modules/
 dist/
+.env

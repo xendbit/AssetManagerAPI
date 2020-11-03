@@ -13,8 +13,11 @@ export class NewAssetRequest {
     public totalQuantity: number;
     @IsNumber()
     @ApiProperty()
+    public price: number;
+    @IsNumber()
+    @ApiProperty()
     public decimal: number;
     @IsNotEmpty()
     @ApiProperty()
-    public issuerId: number;;
+    public issuerId: number;
 }
