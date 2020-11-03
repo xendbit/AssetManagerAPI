@@ -1,0 +1,4 @@
+package-lock.json
+AssetManager.db
+dist/
+node_modules/
