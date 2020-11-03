@@ -1,7 +1,7 @@
 import { User } from './../models/user.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { AES, enc } from 'crypto-js';
+import { AES } from 'crypto-js';
 import Web3 from 'web3';
 import { Config } from './../models/config';
 import { Repository } from 'typeorm';
