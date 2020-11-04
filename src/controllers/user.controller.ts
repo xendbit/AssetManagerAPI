@@ -22,7 +22,7 @@ export class UserController {
         return "Set Account Balance Request Submitted Successfully";
     }
 
-    @Post('get-balance/:id')
+    @Get('get-balance/:id')
     @Roles('all')
     getAccountBalance(@Param('id', ParseIntPipe) id: number): Promise<string> {
         return this.userService.getBalance(id);
