@@ -10,10 +10,10 @@ export class AssetTransferRequest {
     public assetIssuerId: number;
     @IsNotEmpty()
     @ApiProperty()
-    public senderId: number;
+    public sellerId: number;
     @IsNotEmpty()
     @ApiProperty()
-    public recipientId: number;
+    public buyerId: number;
     @IsNumber()
     @ApiProperty()
     public quantity: number;

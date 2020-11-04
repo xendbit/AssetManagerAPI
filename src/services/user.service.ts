@@ -95,7 +95,7 @@ export class UserService {
         const account = this.web3.eth.accounts.create(password);
         const encrypted = AES.encrypt(password, process.env.KEY).toString();
         const pkEncrypted = AES.encrypt(account.privateKey, process.env.KEY).toString();
-        this.web3.eth.personal.importRawKey(account.privateKey.replace('0x', ''), password);
+        this.web3.eth.personal.importRawKey(account.privateKey.replace('0x', ''), password);        
 
         const user: User = {
             password: encrypted,

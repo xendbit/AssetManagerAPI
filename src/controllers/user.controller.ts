@@ -2,8 +2,9 @@ import { Roles } from './../decorators/roles.decorator';
 import { SetAccountBalanceRequest } from './../models/request.objects/set-account-balance-request';
 import { UserService } from './../services/user.service';
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiSecurity } from '@nestjs/swagger';
+import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user')
 @Controller('user')
 export class UserController {
     constructor(private userService: UserService) {}
