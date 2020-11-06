@@ -13,6 +13,8 @@ import fs = require('fs');
 @Injectable()
 export class AssetsService {
     private contractAddress: string;
+    private contractor: string;
+    private contractorPassword: string;
     private abiPath: string;
     private abi;
     private AssetManagerContract;
@@ -21,8 +23,11 @@ export class AssetsService {
     private userRepository: Repository<User>
 
     private readonly logger = new Logger(AssetsService.name);
+
     constructor() {
         this.contractAddress = process.env.CONTRACT_ADDRESS;
+        this.contractor = process.env.CONTRACTOR;
+        this.contractorPassword = AES.decrypt(process.env.CONTRACTOR_PASS, process.env.KEY).toString(enc.Utf8);
         this.abiPath = process.env.ABI_PATH
         this.abi = JSON.parse(fs.readFileSync(path.resolve(this.abiPath), 'utf8'));
         this.web3 = new Web3(process.env.WEB3_URL);
@@ -30,12 +35,8 @@ export class AssetsService {
         this.AssetManagerContract = new this.web3.eth.Contract(this.abi.abi, this.contractAddress);
     }
 
-    async buyAsset(assetTransfer: AssetTransferRequest): Promise<Asset> {
+    async buyAsset(assetTransfer: AssetTransferRequest): Promise<number> {
         const query = "SELECT * FROM user WHERE userId = ?";
-        const issuerUser = await this.userRepository.query(query, [assetTransfer.assetIssuerId]);
-        if (issuerUser.length !== 1) {
-            throw new Error(`Issuer with id ${assetTransfer.assetIssuerId} not found`);
-        }
         const sellerUser = await this.userRepository.query(query, [assetTransfer.sellerId]);
         if (sellerUser.length !== 1) {
             throw new Error(`Sender with id ${assetTransfer.sellerId} not found`);
@@ -45,10 +46,9 @@ export class AssetsService {
             throw new Error(`Recipient with id ${assetTransfer.buyerId} not found`);
         }
 
+        const tokenId = assetTransfer.tokenId;
         const seller = sellerUser[0].address;
         const buyer = buyerUser[0].address
-        const assetName = assetTransfer.assetName;
-        const assetIssuer = issuerUser[0].address;
         const buyerPassword = AES.decrypt(buyerUser[0].password, process.env.KEY).toString(enc.Utf8);
         const quantity = assetTransfer.quantity;
         const price = assetTransfer.price;
@@ -57,9 +57,8 @@ export class AssetsService {
             try {
                 await this.web3.eth.personal.unlockAccount(buyer, buyerPassword);
                 this.logger.log(`Account ${buyer} unlocked`);
-                await this.AssetManagerContract.methods.buyAsset(seller, assetName, assetIssuer, quantity, price).send({ from: buyer, gasPrice: '0' });
-                const res = await this.AssetManagerContract.methods.getAsset(assetName, assetIssuer, buyer).call({ from: buyer, gasPrice: '0' });
-                resolve(Asset.assetFromResponse(res));
+                await this.AssetManagerContract.methods.buyShares(tokenId, seller, quantity, price).send({ from: buyer, gasPrice: '0' });
+                resolve(quantity);
             } catch (e) {
                 reject(e);
             }
@@ -73,45 +72,29 @@ export class AssetsService {
             throw new Error(`Issuer with id ${asset.issuerId} not found`);
         }
         const issuer = issuerUser[0].address;
-        const password = AES.decrypt(issuerUser[0].password, process.env.KEY).toString(enc.Utf8);
 
         return new Promise(async (resolve, reject) => {
             try {
-                await this.web3.eth.personal.unlockAccount(issuer, password);
-                this.logger.log(`Account ${issuer} unlocked`);
+                await this.web3.eth.personal.unlockAccount(this.contractor, this.contractorPassword);
+                this.logger.log(`Account ${this.contractor} unlocked`);
                 const assetRequest = {
                     name: asset.name,
-                    description: asset.description,
+                    tokenId: asset.tokenId,
+                    symbol: asset.symbol,
                     totalQuantity: asset.totalQuantity,
-                    price: asset.price,
-                    decimal: asset.decimal
+                    price: asset.price
                 }
 
                 this.logger.log(assetRequest);
-                await this.AssetManagerContract.methods.createAsset(assetRequest).send({ from: issuer, gasPrice: '0' });
-                this.logger.log(`Asset ${asset.name} created`);
-                const res = await this.AssetManagerContract.methods.getAsset(asset.name, issuer).call({ from: issuer, gasPrice: '0' });
+                await this.AssetManagerContract.methods.mint(assetRequest).send({ from: this.contractor, gasPrice: '0' });
+                this.logger.log(`Asset ${asset.symbol} minted`);
+                // transfer all the assets to issuer
+                await this.AssetManagerContract.methods.transferShares(asset.tokenId, issuer, asset.totalQuantity).send({ from: this.contractor, gasPrice: '0' });
+                const res = await this.AssetManagerContract.methods.sharesContract(asset.tokenId).call({ from: this.contractor, gasPrice: '0' });
                 resolve(Asset.assetFromResponse(res));
             } catch (e) {
                 reject(e);
             }
-        });
-    }
-
-    getAssets(): Promise<Asset[]> {
-        return new Promise((resolve, reject) => {
-            this.AssetManagerContract.methods.getAssets().call({ from: process.env.DTSL_ADDRESS, gasPrice: '0' }).then(result => {
-                const allAssets = [];
-                for (const res of result) {
-                    if (res.id >= 0) {
-                        allAssets.push(Asset.assetFromResponse(res));
-                    }
-                }
-
-                resolve(allAssets);
-            }, error => {
-                reject(error);
-            });
         });
     }
 }

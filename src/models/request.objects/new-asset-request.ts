@@ -4,19 +4,19 @@ import { IsNotEmpty, IsNumber } from "class-validator";
 export class NewAssetRequest {
     @IsNotEmpty()
     @ApiProperty()
+    public tokenId: number;
+    @IsNotEmpty()
+    @ApiProperty()
     public name: string;
     @IsNotEmpty()
     @ApiProperty()
-    public description: string;
+    public symbol: string;
     @IsNumber()
     @ApiProperty()
     public totalQuantity: number;
     @IsNumber()
     @ApiProperty()
     public price: number;
-    @IsNumber()
-    @ApiProperty()
-    public decimal: number;
     @IsNotEmpty()
     @ApiProperty()
     public issuerId: number;

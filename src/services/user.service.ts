@@ -17,11 +17,15 @@ export class UserService {
     private abi;
     private AssetManagerContract;
     private web3;
+    private contractor: string;
+    private contractorPassword: string;
 
     @InjectRepository(User)
     private userRepository: Repository<User>
 
     constructor() {
+        this.contractor = process.env.CONTRACTOR;
+        this.contractorPassword = AES.decrypt(process.env.CONTRACTOR_PASS, process.env.KEY).toString(enc.Utf8);
         this.contractAddress = process.env.CONTRACT_ADDRESS;
         this.abiPath = process.env.ABI_PATH;
         this.abi = JSON.parse(fs.readFileSync(path.resolve(this.abiPath), 'utf8'));
@@ -41,11 +45,11 @@ export class UserService {
                 this.logger.log(`Difference: ${difference}`);
                 if (difference > 0) {
                     // send difference from credentials to xendcredit
-                    this.sendToken(dbUser[0].address, process.env.CONTRACTOR, difference, password);
+                    this.fundWallet(dbUser[0].address, process.env.CONTRACTOR, difference, password);
                 } else if (difference < 0) {
                     difference *= -1;
                     // send difference from xendcredit to credentials
-                    this.sendToken(process.env.CONTRACTOR, dbUser[0].address, difference, process.env.CONTRACTOR_PASS);
+                    this.fundWallet(this.contractor, dbUser[0].address, difference, this.contractorPassword);
                 }
             }, error => {
                 throw error;
@@ -53,11 +57,24 @@ export class UserService {
         }
     }
 
-    async sendToken(from: string, to: string, amount: number, fromPassword: string) {
+    async fundWallet(from: string, to: string, amount: number, fromPassword: string) {
         await this.web3.eth.personal.unlockAccount(from, fromPassword);
-        this.AssetManagerContract.methods.transferToken(to, amount).send({ from: from, gasPrice: '0' }).then(() => {
+        this.AssetManagerContract.methods.fundWallet(to, amount).send({ from: from, gasPrice: '0' }).then(() => {
             this.logger.log(`${amount} transfered from ${from} to ${to}`);
         })
+    }
+
+    async getSharesBalance(tokenId: number, id: number): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
+            if (dbUser.length === 1) {
+                const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
+                const balance:string = await this._getSharesBalance(tokenId, dbUser[0].address, password);
+                resolve(balance);
+            } else {
+                reject('User with ID not found');
+            }
+        });
     }
 
     async getBalance(id: number): Promise<string> {
@@ -72,11 +89,25 @@ export class UserService {
             }
         });
     }
+
+    _getSharesBalance(tokenId: number, address: string, password: string): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            await this.web3.eth.personal.unlockAccount(address, password);
+            this.logger.log(`Unlocked ${address}`);
+            this.AssetManagerContract.methods.ownedShares(tokenId, address).call({ from: address, gasPrice: '0' }).then((res) => {
+                this.logger.log(`Shares for token with id: ${tokenId} === ${address}: ${res}`);
+                resolve(res);
+            }, error => {
+                reject(error);
+            });
+        });
+    }
+
     _getBalance(address: string, password: string): Promise<string> {
         return new Promise(async (resolve, reject) => {
             await this.web3.eth.personal.unlockAccount(address, password);
             this.logger.log(`Unlocked ${address}`);
-            this.AssetManagerContract.methods.getTokenBalance().call({ from: address, gasPrice: '0' }).then((res) => {
+            this.AssetManagerContract.methods.walletBalance(address).call({ from: address, gasPrice: '0' }).then((res) => {
                 this.logger.log(`Xether Balance for ${address}: ${res}`);
                 resolve(res);
             }, error => {

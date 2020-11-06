@@ -2,35 +2,26 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class Asset {
     @ApiProperty()
-    public id: number;
+    public contract: string;    
+    @ApiProperty()
+    public tokenId: number;
     @ApiProperty()
     public name: string;
     @ApiProperty()
-    public description: string;
+    public symbol: string;
     @ApiProperty()
     public totalQuantity: number;
     @ApiProperty()
     public price: number;
-    @ApiProperty()
-    public quantity: number;
-    @ApiProperty()
-    public decimal: number;
-    @ApiProperty()
-    public issuer: string;
-    @ApiProperty()
-    public owner: string;     
-
+    
     public static assetFromResponse(res): Asset {
-        const asset: Asset = {
-            id: res.id,
-            name: res.name,
-            description: res.description,
-            totalQuantity: res.totalQuantity,
-            price: res.price,
-            quantity: res.quantity,
-            decimal: res.decimal,
-            issuer: res.issuer,
-            owner: res.owner
+        const asset = {
+            contract: res[0],
+            tokenId: res[1],
+            name: res[2],
+            symbol: res[3],
+            totalQuantity: res[4],
+            price: res[5],
         }
         
         return asset;

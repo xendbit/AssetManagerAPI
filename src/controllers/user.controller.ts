@@ -28,4 +28,10 @@ export class UserController {
     getAccountBalance(@Param('id', ParseIntPipe) id: number): Promise<string> {
         return this.userService.getBalance(id);
     }    
+
+    @Get('get-shares/:tokenId/:id')
+    @Roles('all')
+    getSharesBalance(@Param('tokenId', ParseIntPipe) tokenId: number, @Param('id', ParseIntPipe) id: number): Promise<string> {
+        return this.userService.getSharesBalance(tokenId, id);
+    }        
 }

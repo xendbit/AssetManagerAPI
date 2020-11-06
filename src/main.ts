@@ -13,6 +13,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggerInterceptor());  
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new ExceptionsFilter());
+  app.setGlobalPrefix('v2');
 
   const options = new DocumentBuilder()
       .setTitle('Asset Manager API') 

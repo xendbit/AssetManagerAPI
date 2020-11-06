@@ -4,10 +4,7 @@ import { IsNotEmpty } from 'class-validator';
 export class AssetTransferRequest {
     @IsNotEmpty()
     @ApiProperty()
-    public assetName: string;
-    @IsNotEmpty()
-    @ApiProperty()
-    public assetIssuerId: number;
+    public tokenId: number;
     @IsNotEmpty()
     @ApiProperty()
     public sellerId: number;
@@ -20,5 +17,4 @@ export class AssetTransferRequest {
     @IsNumber()
     @ApiProperty()
     public price: number;
-
 }

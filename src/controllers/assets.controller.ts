@@ -11,13 +11,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 export class AssetsController {
     constructor(private readonly assetsService: AssetsService){}
     
-    @Get()
-    @Roles('all')
-    getAllAssets(): Promise<Asset[]> {
-        return this.assetsService.getAssets();
-    }
-
-    @Post()
+    @Post('/new')
     @Roles('admin')
     @ApiSecurity('access-key')
     createNewAsset(@Body() asset: NewAssetRequest): Promise<Asset> {
@@ -27,7 +21,7 @@ export class AssetsController {
     @Post('/buy')
     @Roles('admin')
     @ApiSecurity('access-key')
-    buyAsset(@Body() assetTranfer: AssetTransferRequest): Promise<Asset> {
+    buyAsset(@Body() assetTranfer: AssetTransferRequest): Promise<number> {
         return this.assetsService.buyAsset(assetTranfer);
     }
 }
