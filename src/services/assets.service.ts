@@ -82,14 +82,13 @@ export class AssetsService {
                     tokenId: asset.tokenId,
                     symbol: asset.symbol,
                     totalQuantity: asset.totalQuantity,
-                    price: asset.price
+                    price: asset.price,
+                    issuer: issuer,
                 }
 
                 this.logger.log(assetRequest);
                 await this.AssetManagerContract.methods.mint(assetRequest).send({ from: this.contractor, gasPrice: '0' });
                 this.logger.log(`Asset ${asset.symbol} minted`);
-                // transfer all the assets to issuer
-                await this.AssetManagerContract.methods.transferShares(asset.tokenId, issuer, asset.totalQuantity).send({ from: this.contractor, gasPrice: '0' });
                 const res = await this.AssetManagerContract.methods.sharesContract(asset.tokenId).call({ from: this.contractor, gasPrice: '0' });
                 resolve(Asset.assetFromResponse(res));
             } catch (e) {
