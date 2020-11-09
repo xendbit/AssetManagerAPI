@@ -89,7 +89,7 @@ export class AssetsService {
                 this.logger.log(assetRequest);
                 await this.AssetManagerContract.methods.mint(assetRequest).send({ from: this.contractor, gasPrice: '0' });
                 this.logger.log(`Asset ${asset.symbol} minted`);
-                const res = await this.AssetManagerContract.methods.sharesContract(asset.tokenId).call({ from: this.contractor, gasPrice: '0' });
+                const res = await this.AssetManagerContract.methods.tokenShares(asset.tokenId).call({ from: this.contractor, gasPrice: '0' });
                 resolve(Asset.assetFromResponse(res));
             } catch (e) {
                 reject(e);
