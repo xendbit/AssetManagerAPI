@@ -5,6 +5,7 @@ import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UserRequest } from 'src/models/request.objects/user.request';
 import { User } from 'src/models/user.model';
+import { LoginRequest } from 'src/models/request.objects/login.request';
 
 @ApiTags('user')
 @Controller('user')
@@ -17,6 +18,13 @@ export class UserController {
     getNewAddress(@Body() uro: UserRequest): Promise<User> {
         return this.userService.getNewAddress(uro);
     }
+
+    @Post('login')
+    @Roles('admin')
+    @ApiSecurity('access-key')
+    login(@Body() lr: LoginRequest): Promise<User> {
+        return this.userService.login(lr);
+    }    
 
     @Roles('admin')
     @ApiSecurity('access-key')

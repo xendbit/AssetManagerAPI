@@ -1,15 +1,15 @@
-import { Utils } from './../utils';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { compareSync, genSaltSync, hashSync } from 'bcrypt';
+import { AES, enc, HmacSHA256 } from 'crypto-js';
+import { LoginRequest } from 'src/models/request.objects/login.request';
+import { UserRequest } from 'src/models/request.objects/user.request';
+import { Repository } from 'typeorm';
+import Web3 from 'web3';
 import { SetAccountBalanceRequest } from './../models/request.objects/set-account-balance-request';
 import { User } from './../models/user.model';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable, Logger } from '@nestjs/common';
-import { AES, enc, HmacSHA256 } from 'crypto-js';
-import Web3 from 'web3';
-import { Repository } from 'typeorm';
 import path = require('path');
 import fs = require('fs');
-import { UserRequest } from 'src/models/request.objects/user.request';
-import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -71,7 +71,7 @@ export class UserService {
             const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
             if (dbUser.length === 1) {
                 const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-                const balance:string = await this._getSharesBalance(tokenId, dbUser[0].address, password);
+                const balance: string = await this._getSharesBalance(tokenId, dbUser[0].address, password);
                 resolve(balance);
             } else {
                 reject('User with ID not found');
@@ -82,12 +82,12 @@ export class UserService {
     async getBalance(userId: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             const dbUser = await this.userRepository.createQueryBuilder("user")
-                                .where(`userId = :value`, { value: userId })
-                                .getOne();
+                .where(`userId = :value`, { value: userId })
+                .getOne();
             //const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
             if (dbUser !== undefined) {
                 const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-                const balance:string = await this._getBalance(dbUser[0].address, password);
+                const balance: string = await this._getBalance(dbUser[0].address, password);
                 resolve(balance);
             } else {
                 reject('User with ID not found');
@@ -121,38 +121,61 @@ export class UserService {
         });
     }
 
+    async login(uro: LoginRequest): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const salt = genSaltSync(12, 'a');
+                let dbUser: User = await this.userRepository.createQueryBuilder("user")
+                    .where("email = :email", { "email": uro.email })
+                    .getOne();
+
+                if (dbUser !== undefined) {
+                    if (compareSync(uro.password, dbUser.password)) {
+                        resolve(dbUser);
+                    } else {
+                        throw Error("Login Failed: password")
+                    }
+                } else {
+                    throw new Error("Login Failed. email address");
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async getNewAddress(uro: UserRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-            const salt = genSaltSync(12, 'a');
-            const passwordHashed = hashSync(uro.password, salt);
-            const passphraseHashed = HmacSHA256(uro.passphrase, process.env.KEY).toString();
-    
-            let dbUser: User = await this.userRepository.createQueryBuilder("user")
-                        .where("email = :email", {"email": uro.email})
-                        .getOne();
-            
-            if(dbUser !== undefined) {
-                throw Error("User with email address already exists");
+                const salt = genSaltSync(12, 'a');
+                const passwordHashed = hashSync(uro.password, salt);
+                const passphraseHashed = HmacSHA256(uro.passphrase, process.env.KEY).toString();
+
+                let dbUser: User = await this.userRepository.createQueryBuilder("user")
+                    .where("email = :email", { "email": uro.email })
+                    .getOne();
+
+                if (dbUser !== undefined) {
+                    throw Error("User with email address already exists");
+                }
+
+                const account = this.web3.eth.accounts.create(passphraseHashed);
+                this.web3.eth.personal.importRawKey(account.privateKey.replace('0x', ''), passwordHashed);
+                const pkHashed = AES.encrypt(account.privateKey, process.env.KEY).toString();
+
+                const user: User = {
+                    password: passwordHashed,
+                    privateKey: pkHashed,
+                    passphrase: passphraseHashed,
+                    address: account.address,
+                    email: uro.email
+                }
+
+                dbUser = await this.userRepository.save(user);
+                resolve(dbUser);
+            } catch (error) {
+                reject(error);
             }
-            
-            const account = this.web3.eth.accounts.create(passphraseHashed);
-            this.web3.eth.personal.importRawKey(account.privateKey.replace('0x', ''), passwordHashed);        
-            const pkHashed = AES.encrypt(account.privateKey, process.env.KEY).toString();
-    
-            const user: User = {
-                password: passwordHashed,
-                privateKey: pkHashed,
-                passphrase: passphraseHashed,
-                address: account.address,
-                email: uro.email
-            }
-    
-            dbUser = await this.userRepository.save(user);
-            resolve(dbUser);
-        } catch(error) {
-            reject(error);
-        }
         });
     }
 }
