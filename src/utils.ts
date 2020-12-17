@@ -1,3 +1,6 @@
+import { OrderRequest } from "./models/request.objects/order.requet";
+const web3Utils = require('web3-utils');
+
 export class Utils {
     public static generatePassword(passwordLength) {
         const numberChars = "0123456789";
@@ -20,5 +23,16 @@ export class Utils {
             array[j] = temp;
         }
         return array;
-    }    
+    }
+
+    public static getKey(or: OrderRequest) {
+        const key = web3Utils.soliditySha3(
+            { type: 'uint256', value: or.amount },
+            { type: 'uint256', value: or.price },
+            { type: 'uint256', value: or.tokenId },
+            { type: 'uint256', value: new Date().getTime() }
+        );
+
+        return key;
+    }
 }

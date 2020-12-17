@@ -12,12 +12,7 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'AssetManager.db',
-      entities: [__dirname + '/**/*.model{.ts,.js}'],
-      synchronize: true,
-    }),
+    TypeOrmModule.forRoot(),
     TypeOrmModule.forFeature([User]),
   ],
   controllers: [

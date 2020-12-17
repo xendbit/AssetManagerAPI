@@ -3,11 +3,13 @@ import { SetAccountBalanceRequest } from './../models/request.objects/set-accoun
 import { User } from './../models/user.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, Logger } from '@nestjs/common';
-import { AES, enc } from 'crypto-js';
+import { AES, enc, HmacSHA256 } from 'crypto-js';
 import Web3 from 'web3';
 import { Repository } from 'typeorm';
 import path = require('path');
 import fs = require('fs');
+import { UserRequest } from 'src/models/request.objects/user.request';
+import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -33,7 +35,7 @@ export class UserService {
         this.web3.eth.handleRevert = true;
         this.AssetManagerContract = new this.web3.eth.Contract(this.abi.abi, this.contractAddress);
     }
-    
+
     async setAccountBalance(setAccountBalanceRequest: SetAccountBalanceRequest) {
         const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [setAccountBalanceRequest.userId]);
         if (dbUser.length === 1) {
@@ -77,10 +79,13 @@ export class UserService {
         });
     }
 
-    async getBalance(id: number): Promise<string> {
+    async getBalance(userId: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
-            const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
-            if (dbUser.length === 1) {
+            const dbUser = await this.userRepository.createQueryBuilder("user")
+                                .where(`userId = :value`, { value: userId })
+                                .getOne();
+            //const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
+            if (dbUser !== undefined) {
                 const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
                 const balance:string = await this._getBalance(dbUser[0].address, password);
                 resolve(balance);
@@ -116,26 +121,38 @@ export class UserService {
         });
     }
 
-    async getNewAddress(userId: number) {
-        let dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [userId]);
-        if (dbUser.length === 1) {
-            return dbUser[0];
+    async getNewAddress(uro: UserRequest): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+            const salt = genSaltSync(12, 'a');
+            const passwordHashed = hashSync(uro.password, salt);
+            const passphraseHashed = HmacSHA256(uro.passphrase, process.env.KEY).toString();
+    
+            let dbUser: User = await this.userRepository.createQueryBuilder("user")
+                        .where("email = :email", {"email": uro.email})
+                        .getOne();
+            
+            if(dbUser !== undefined) {
+                throw Error("User with email address already exists");
+            }
+            
+            const account = this.web3.eth.accounts.create(passphraseHashed);
+            this.web3.eth.personal.importRawKey(account.privateKey.replace('0x', ''), passwordHashed);        
+            const pkHashed = AES.encrypt(account.privateKey, process.env.KEY).toString();
+    
+            const user: User = {
+                password: passwordHashed,
+                privateKey: pkHashed,
+                passphrase: passphraseHashed,
+                address: account.address,
+                email: uro.email
+            }
+    
+            dbUser = await this.userRepository.save(user);
+            resolve(dbUser);
+        } catch(error) {
+            reject(error);
         }
-
-        const password = Utils.generatePassword(32);
-        const account = this.web3.eth.accounts.create(password);
-        const encrypted = AES.encrypt(password, process.env.KEY).toString();
-        const pkEncrypted = AES.encrypt(account.privateKey, process.env.KEY).toString();
-        this.web3.eth.personal.importRawKey(account.privateKey.replace('0x', ''), password);        
-
-        const user: User = {
-            password: encrypted,
-            privateKey: pkEncrypted,
-            address: account.address,
-            userId: userId
-        }
-
-        dbUser = await this.userRepository.save(user);
-        return dbUser;
+        });
     }
 }

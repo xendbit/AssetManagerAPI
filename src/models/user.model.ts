@@ -1,16 +1,23 @@
 import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity("user")
-@Unique("user_idx", ["userId", "address"])
+@Unique("user_idx", ["email", "address"])
 export class User {
     @PrimaryGeneratedColumn()
     id?: number;
-    @Column()
+    
+    @Column({width: 512})
     privateKey: string;
-    @Column()
+    
+    @Column({width: 512})
+    passphrase: string;
+    
+    @Column({width: 512})
+    email: string;    
+    
+    @Column({width: 512})
     password: string;    
-    @Column()
+    
+    @Column({width: 512})
     address: string;
-    @Column()    
-    userId: number;    
 }

@@ -3,16 +3,19 @@ import { SetAccountBalanceRequest } from './../models/request.objects/set-accoun
 import { UserService } from './../services/user.service';
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { UserRequest } from 'src/models/request.objects/user.request';
+import { User } from 'src/models/user.model';
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
     constructor(private userService: UserService) {}
 
-    @Get('new-address/:id')
-    @Roles('all')
-    getNewAddress(@Param('id', ParseIntPipe) id: number) {
-        return this.userService.getNewAddress(id);
+    @Post('new-user')
+    @Roles('admin')
+    @ApiSecurity('access-key')
+    getNewAddress(@Body() uro: UserRequest): Promise<User> {
+        return this.userService.getNewAddress(uro);
     }
 
     @Roles('admin')

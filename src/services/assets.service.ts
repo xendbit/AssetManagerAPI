@@ -9,6 +9,9 @@ import { Asset } from '../models/asset.model';
 import Web3 from 'web3';
 import path = require('path');
 import fs = require('fs');
+import { OrderRequest } from 'src/models/request.objects/order.requet';
+import { Utils } from 'src/utils';
+import { Order } from 'src/models/order.model';
 
 @Injectable()
 export class AssetsService {
@@ -33,6 +36,43 @@ export class AssetsService {
         this.web3 = new Web3(process.env.WEB3_URL);
         this.web3.eth.handleRevert = true;
         this.AssetManagerContract = new this.web3.eth.Contract(this.abi.abi, this.contractAddress);
+    }
+
+    async postOrder(or: OrderRequest): Promise<Order> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const key = Utils.getKey(or);
+                or.key = key;
+                const poster = await this.userRepository.createQueryBuilder("user")
+                    .where(`userId = :value`, { value: or.userId })
+                    .getOne();
+                if (poster === undefined) {
+                    reject(`User with id: ${or.userId} not found`);
+                }
+
+                await this.AssetManagerContract.methods.postOrder(or).send({ from: poster.address, gasPrice: '0' });
+                console.log('Order Posted...Loading order from blockchain');
+                const blOrder = await this.AssetManagerContract.methods.getOrder(key).call({ from: poster.address });
+                const order: Order = {
+                    amountRemaining: blOrder.amountRemaining,
+                    buyer: blOrder.buyer,
+                    goodUntil: blOrder.goodUntil,
+                    key: key,
+                    orderDate: blOrder.orderDate,
+                    orderStrategy: blOrder.orderStrategy,
+                    orderType: blOrder.orderType,
+                    originalAmount: blOrder.originalAmount,
+                    price: blOrder.price,
+                    seller: blOrder.seller,
+                    status: blOrder.status,
+                    statusDate: blOrder.statusDate,
+                    tokenId: blOrder.tokenId,
+                };
+                resolve(order);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     async buyAsset(assetTransfer: AssetTransferRequest): Promise<number> {
