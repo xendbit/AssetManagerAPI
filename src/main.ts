@@ -14,6 +14,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new ExceptionsFilter());
   app.setGlobalPrefix('v3');
+  app.enableCors();
 
   const options = new DocumentBuilder()
       .setTitle('Asset Manager API') 

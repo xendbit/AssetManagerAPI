@@ -73,22 +73,6 @@ export class UserService {
     //     });
     // }
 
-    // async getBalance(userId: number): Promise<string> {
-    //     return new Promise(async (resolve, reject) => {
-    //         const dbUser = await this.userRepository.createQueryBuilder("user")
-    //             .where(`userId = :value`, { value: userId })
-    //             .getOne();
-    //         //const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
-    //         if (dbUser !== undefined) {
-    //             const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-    //             const balance: string = await this._getBalance(dbUser[0].address, password);
-    //             resolve(balance);
-    //         } else {
-    //             reject('User with ID not found');
-    //         }
-    //     });
-    // }
-
     // _getSharesBalance(tokenId: number, address: string, password: string): Promise<string> {
     //     return new Promise(async (resolve, reject) => {
     //         await this.web3.eth.personal.unlockAccount(address, password);
@@ -115,18 +99,36 @@ export class UserService {
     //     });
     // }
 
+    async getBalance(userId: number): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dbUser = await this.userRepository.findOne(userId);
+                if (dbUser !== undefined) {
+                    const balance: number = await this.AssetManagerContract.methods.walletBalance(dbUser.address).call({ from: dbUser.address, gasPrice: '0' });
+                    resolve(balance);
+                } else {
+                    reject('User with ID not found');
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async fundWallet(fwr: FundWalletRequest): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 const dbUser = await this.userRepository.findOne(fwr.userId);
+                if (dbUser === undefined) {
+                    throw Error('User with ID not found');
+                }
                 const from = process.env.CONTRACTOR;
                 const fromPassword = AES.decrypt(process.env.CONTRACTOR_PASS, process.env.KEY).toString(enc.Utf8);
 
                 await this.web3.eth.personal.unlockAccount(from, fromPassword);
-                this.AssetManagerContract.methods.fundWallet(dbUser.address, fwr.amount).send({ from: from, gasPrice: '0' }).then(() => {
-                    this.logger.log(`${fwr.amount} transfered from ${from} to ${dbUser.address}`);
-                    resolve('Account funding successful');
-                });
+                await this.AssetManagerContract.methods.fundWallet(dbUser.address, fwr.amount).send({ from: from, gasPrice: '0' });
+                this.logger.log(`${fwr.amount} transfered from ${from} to ${dbUser.address}`);
+                resolve('Account funding successful');
             } catch (error) {
                 reject(error);
             }

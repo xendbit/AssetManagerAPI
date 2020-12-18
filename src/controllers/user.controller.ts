@@ -32,4 +32,9 @@ export class UserController {
     fundWallet(@Body() fwr: FundWalletRequest) {
         return this.userService.fundWallet(fwr);
     }
+
+    @Get('wallet-balance/:userId')
+    getWalletBalance(@Param("userId") userId: number): Promise<number> {
+        return this.userService.getBalance(userId);
+    }
 }
