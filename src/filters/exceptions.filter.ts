@@ -8,7 +8,7 @@ export class ExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
-    const status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
     this.logger.error("Error: ", exception);
     let message = exception;
     if (exception.message) {
@@ -17,6 +17,11 @@ export class ExceptionsFilter implements ExceptionFilter {
     if (exception.response) {
       message = exception.response.message;
     }
+
+    if(message.indexOf("not found") >= 0) {
+      status = HttpStatus.NOT_FOUND;
+    }
+
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),

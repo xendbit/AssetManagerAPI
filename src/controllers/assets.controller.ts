@@ -1,7 +1,7 @@
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { AssetTransferRequest } from '../models/request.objects/asset-transfer-request';
 import { AssetsService } from '../services/assets.service';
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
 import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Order } from 'src/models/order.model';
@@ -19,6 +19,23 @@ export class AssetsController {
     @ApiSecurity('access-key')
     createNewAsset(@Body() asset: AssetRequest): Promise<TokenShares> {
         return this.assetsService.issueAsset(asset);
+    }
+
+    @Get('by-token/:tokenId')
+    findAssetByTokenId(@Param("tokenId") tokenId: number): Promise<TokenShares> {
+        return this.assetsService.findAssetByTokenId(tokenId)
+    }
+
+    @Get('by-issuer/:issuerId')
+    listAssetByIssuer(
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Param("issuerId") issuerId: number): Promise<Pagination<TokenShares>> {
+        return this.assetsService.listAssetsByIssuer({
+            page,
+            limit,
+            route: 'http://localhost:8081/v3/assets',
+        }, issuerId);
     }
 
     @Get('')

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './../models/user.model';
 import { AssetTransferRequest } from '../models/request.objects/asset-transfer-request';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import Web3 from 'web3';
 import path = require('path');
 import fs = require('fs');
@@ -109,25 +109,52 @@ export class AssetsService {
         });
     }
 
+    async findAssetByTokenId(tokenId: number): Promise<TokenShares> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const token: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
+                                .where("tokenId = :ti", {"ti": tokenId})
+                                .getOne();
+                if(token === undefined) {
+                    throw Error("Token not found");
+                } else {
+                    resolve(token);
+                }
+            } catch(error) {
+                reject(error);
+            }
+        })
+    }
+    async listAssetsByIssuer(options: IPaginationOptions, issuerId: number): Promise<Pagination<TokenShares>> {
+        const issuerUser: User = await this.userRepository.findOne(issuerId);
+        if (issuerUser === undefined) {
+            throw Error("Issuer not found");
+        }
+
+        return paginate<TokenShares>(this.tokenSharesRepository, options, {
+            issuer: issuerUser.address
+        });
+    }
+
     async listAssets(options: IPaginationOptions): Promise<Pagination<TokenShares>> {
         return paginate<TokenShares>(this.tokenSharesRepository, options);
     }
 
     async issueAsset(ar: AssetRequest): Promise<TokenShares> {
         return new Promise(async (resolve, reject) => {
-            try {    
+            try {
                 const issuerUser: User = await this.userRepository.findOne(ar.issuerId);
                 if (issuerUser === undefined) {
                     throw new Error(`Issuer with id ${ar.issuerId} not found`);
                 }
-                const issuer = issuerUser.address;   
-                
+                const issuer = issuerUser.address;
+
                 await this.web3.eth.personal.unlockAccount(this.contractor, this.contractorPassword);
                 this.logger.log(`Account ${this.contractor} unlocked`);
                 const tokenId = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
                 const assetRequest = {
                     tokenId: tokenId,
-                    name: ar.name,                    
+                    name: ar.name,
                     symbol: ar.symbol,
                     totalSupply: ar.totalSupply,
                     issuingPrice: ar.issuingPrice,
@@ -151,9 +178,9 @@ export class AssetsService {
                 dbTokenShares = await this.tokenSharesRepository.save(dbTokenShares);
                 dbTokenShares.owner = "Nigerian Stock Exchange";
                 resolve(dbTokenShares)
-            } catch(error) {
+            } catch (error) {
                 reject(error);
             }
-        });    
+        });
     }
 }
