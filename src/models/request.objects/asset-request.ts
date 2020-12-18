@@ -4,7 +4,7 @@ import { IsNotEmpty, IsNumber } from "class-validator";
 export class AssetRequest {
     @IsNotEmpty()
     @ApiProperty()
-    public name: string;
+    public description: string;
     @IsNotEmpty()
     @ApiProperty()
     public symbol: string;

@@ -154,7 +154,7 @@ export class AssetsService {
                 const tokenId = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
                 const assetRequest = {
                     tokenId: tokenId,
-                    name: ar.name,
+                    name: ar.description,
                     symbol: ar.symbol,
                     totalSupply: ar.totalSupply,
                     issuingPrice: ar.issuingPrice,
@@ -167,7 +167,7 @@ export class AssetsService {
                 let dbTokenShares: TokenShares = {
                     issuer: res.issuer,
                     issuingPrice: res.issuingPrice,
-                    name: res.name,
+                    description: res.name,
                     owner: res.owner,
                     sharesContract: res.sharesContract,
                     symbol: res.symbol,

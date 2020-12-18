@@ -3,7 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
 @Entity("tokenShares")
 @Unique("token_idx", ["tokenId"])
 @Unique("shares_contract_idx", ["sharesContract"])
-@Unique("token_name_issuer", ["name", "issuer"])
+@Unique("token_name_issuer", ["symbol", "issuer"])
 export class TokenShares {
     @PrimaryGeneratedColumn()
     id?: number;
@@ -18,7 +18,7 @@ export class TokenShares {
     sharesContract: string;
 
     @Column()
-    name: string;
+    description: string;
 
     @Column()
     symbol: string;
