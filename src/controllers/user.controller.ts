@@ -24,25 +24,5 @@ export class UserController {
     @ApiSecurity('access-key')
     login(@Body() lr: LoginRequest): Promise<User> {
         return this.userService.login(lr);
-    }    
-
-    @Roles('admin')
-    @ApiSecurity('access-key')
-    @Post('set-balance')    
-    setAccountBalance(@Body() setAccountBalanceRequest: SetAccountBalanceRequest) {
-        this.userService.setAccountBalance(setAccountBalanceRequest);
-        return "Set Account Balance Request Submitted Successfully";
     }
-
-    @Get('get-balance/:id')
-    @Roles('all')
-    getAccountBalance(@Param('id', ParseIntPipe) id: number): Promise<string> {
-        return this.userService.getBalance(id);
-    }    
-
-    @Get('get-shares/:tokenId/:id')
-    @Roles('all')
-    getSharesBalance(@Param('tokenId', ParseIntPipe) tokenId: number, @Param('id', ParseIntPipe) id: number): Promise<string> {
-        return this.userService.getSharesBalance(tokenId, id);
-    }        
 }

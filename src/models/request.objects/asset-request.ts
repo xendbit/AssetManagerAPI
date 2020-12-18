@@ -1,10 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber } from "class-validator";
 
-export class NewAssetRequest {
-    @IsNotEmpty()
-    @ApiProperty()
-    public tokenId: number;
+export class AssetRequest {
     @IsNotEmpty()
     @ApiProperty()
     public name: string;
@@ -13,11 +10,11 @@ export class NewAssetRequest {
     public symbol: string;
     @IsNumber()
     @ApiProperty()
-    public totalQuantity: number;
+    public totalSupply: number;
     @IsNumber()
     @ApiProperty()
-    public price: number;
+    public issuingPrice: number;
     @IsNotEmpty()
     @ApiProperty()
-    public issuerId: number;
+    public issuerId: number;    
 }

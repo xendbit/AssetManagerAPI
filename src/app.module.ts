@@ -8,12 +8,13 @@ import { AssetsService } from './services/assets.service';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { TokenShares } from './models/token.shares.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, TokenShares]),
   ],
   controllers: [
     AssetsController,

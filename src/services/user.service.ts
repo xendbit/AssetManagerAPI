@@ -36,90 +36,90 @@ export class UserService {
         this.AssetManagerContract = new this.web3.eth.Contract(this.abi.abi, this.contractAddress);
     }
 
-    async setAccountBalance(setAccountBalanceRequest: SetAccountBalanceRequest) {
-        const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [setAccountBalanceRequest.userId]);
-        if (dbUser.length === 1) {
-            const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-            this._getBalance(dbUser[0].address, password).then((res) => {
-                const currentBalance = res;
-                this.logger.log(`Current Balance: ${currentBalance}`);
-                let difference = +currentBalance - setAccountBalanceRequest.newBalance;
-                this.logger.log(`Difference: ${difference}`);
-                if (difference > 0) {
-                    // send difference from credentials to xendcredit
-                    this.fundWallet(dbUser[0].address, process.env.CONTRACTOR, difference, password);
-                } else if (difference < 0) {
-                    difference *= -1;
-                    // send difference from xendcredit to credentials
-                    this.fundWallet(this.contractor, dbUser[0].address, difference, this.contractorPassword);
-                }
-            }, error => {
-                throw error;
-            });
-        }
-    }
+    // async setAccountBalance(setAccountBalanceRequest: SetAccountBalanceRequest) {
+    //     const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [setAccountBalanceRequest.userId]);
+    //     if (dbUser.length === 1) {
+    //         const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
+    //         this._getBalance(dbUser[0].address, password).then((res) => {
+    //             const currentBalance = res;
+    //             this.logger.log(`Current Balance: ${currentBalance}`);
+    //             let difference = +currentBalance - setAccountBalanceRequest.newBalance;
+    //             this.logger.log(`Difference: ${difference}`);
+    //             if (difference > 0) {
+    //                 // send difference from credentials to xendcredit
+    //                 this.fundWallet(dbUser[0].address, process.env.CONTRACTOR, difference, password);
+    //             } else if (difference < 0) {
+    //                 difference *= -1;
+    //                 // send difference from xendcredit to credentials
+    //                 this.fundWallet(this.contractor, dbUser[0].address, difference, this.contractorPassword);
+    //             }
+    //         }, error => {
+    //             throw error;
+    //         });
+    //     }
+    // }
 
-    async fundWallet(from: string, to: string, amount: number, fromPassword: string) {
-        await this.web3.eth.personal.unlockAccount(from, fromPassword);
-        this.AssetManagerContract.methods.fundWallet(to, amount).send({ from: from, gasPrice: '0' }).then(() => {
-            this.logger.log(`${amount} transfered from ${from} to ${to}`);
-        })
-    }
+    // async fundWallet(from: string, to: string, amount: number, fromPassword: string) {
+    //     await this.web3.eth.personal.unlockAccount(from, fromPassword);
+    //     this.AssetManagerContract.methods.fundWallet(to, amount).send({ from: from, gasPrice: '0' }).then(() => {
+    //         this.logger.log(`${amount} transfered from ${from} to ${to}`);
+    //     })
+    // }
 
-    async getSharesBalance(tokenId: number, id: number): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
-            if (dbUser.length === 1) {
-                const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-                const balance: string = await this._getSharesBalance(tokenId, dbUser[0].address, password);
-                resolve(balance);
-            } else {
-                reject('User with ID not found');
-            }
-        });
-    }
+    // async getSharesBalance(tokenId: number, id: number): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
+    //         if (dbUser.length === 1) {
+    //             const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
+    //             const balance: string = await this._getSharesBalance(tokenId, dbUser[0].address, password);
+    //             resolve(balance);
+    //         } else {
+    //             reject('User with ID not found');
+    //         }
+    //     });
+    // }
 
-    async getBalance(userId: number): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            const dbUser = await this.userRepository.createQueryBuilder("user")
-                .where(`userId = :value`, { value: userId })
-                .getOne();
-            //const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
-            if (dbUser !== undefined) {
-                const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-                const balance: string = await this._getBalance(dbUser[0].address, password);
-                resolve(balance);
-            } else {
-                reject('User with ID not found');
-            }
-        });
-    }
+    // async getBalance(userId: number): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         const dbUser = await this.userRepository.createQueryBuilder("user")
+    //             .where(`userId = :value`, { value: userId })
+    //             .getOne();
+    //         //const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
+    //         if (dbUser !== undefined) {
+    //             const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
+    //             const balance: string = await this._getBalance(dbUser[0].address, password);
+    //             resolve(balance);
+    //         } else {
+    //             reject('User with ID not found');
+    //         }
+    //     });
+    // }
 
-    _getSharesBalance(tokenId: number, address: string, password: string): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            await this.web3.eth.personal.unlockAccount(address, password);
-            this.logger.log(`Unlocked ${address}`);
-            this.AssetManagerContract.methods.ownedShares(tokenId, address).call({ from: address, gasPrice: '0' }).then((res) => {
-                this.logger.log(`Shares for token with id: ${tokenId} === ${address}: ${res}`);
-                resolve(res);
-            }, error => {
-                reject(error);
-            });
-        });
-    }
+    // _getSharesBalance(tokenId: number, address: string, password: string): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         await this.web3.eth.personal.unlockAccount(address, password);
+    //         this.logger.log(`Unlocked ${address}`);
+    //         this.AssetManagerContract.methods.ownedShares(tokenId, address).call({ from: address, gasPrice: '0' }).then((res) => {
+    //             this.logger.log(`Shares for token with id: ${tokenId} === ${address}: ${res}`);
+    //             resolve(res);
+    //         }, error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
-    _getBalance(address: string, password: string): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            await this.web3.eth.personal.unlockAccount(address, password);
-            this.logger.log(`Unlocked ${address}`);
-            this.AssetManagerContract.methods.walletBalance(address).call({ from: address, gasPrice: '0' }).then((res) => {
-                this.logger.log(`Xether Balance for ${address}: ${res}`);
-                resolve(res);
-            }, error => {
-                reject(error);
-            });
-        });
-    }
+    // _getBalance(address: string, password: string): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         await this.web3.eth.personal.unlockAccount(address, password);
+    //         this.logger.log(`Unlocked ${address}`);
+    //         this.AssetManagerContract.methods.walletBalance(address).call({ from: address, gasPrice: '0' }).then((res) => {
+    //             this.logger.log(`Xether Balance for ${address}: ${res}`);
+    //             resolve(res);
+    //         }, error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
     async login(uro: LoginRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {

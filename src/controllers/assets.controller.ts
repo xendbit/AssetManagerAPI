@@ -1,23 +1,33 @@
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { AssetTransferRequest } from '../models/request.objects/asset-transfer-request';
-import { NewAssetRequest } from '../models/request.objects/new-asset-request';
 import { AssetsService } from '../services/assets.service';
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { Asset } from 'src/models/asset.model';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
 import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Order } from 'src/models/order.model';
+import { TokenShares } from 'src/models/token.shares.model';
+import { AssetRequest } from 'src/models/request.objects/asset-request';
+import { Pagination } from 'nestjs-typeorm-paginate';
 
 @Controller('/assets')
 @ApiTags('asset-manager')
 export class AssetsController {
-    constructor(private readonly assetsService: AssetsService){}
-    
-    @Post('/new')
+    constructor(private readonly assetsService: AssetsService) { }
+
+    @Post('/issue-asset')
     @Roles('admin')
     @ApiSecurity('access-key')
-    createNewAsset(@Body() asset: NewAssetRequest): Promise<Asset> {
-        return this.assetsService.createAsset(asset);
+    createNewAsset(@Body() asset: AssetRequest): Promise<TokenShares> {
+        return this.assetsService.issueAsset(asset);
+    }
+
+    @Get('')
+    listAssets(@Query('page') page: number = 1, @Query('limit') limit: number = 10): Promise<Pagination<TokenShares>> {
+        return this.assetsService.listAssets({
+            page,
+            limit,
+            route: 'http://localhost:8081/v3/assets',
+        });
     }
 
     @Post('/buy')

@@ -6,18 +6,18 @@ export class User {
     @PrimaryGeneratedColumn()
     id?: number;
     
-    @Column({width: 512})
+    @Column()
     privateKey: string;
     
-    @Column({width: 512})
+    @Column()
     passphrase: string;
     
-    @Column({width: 512})
+    @Column()
     email: string;    
     
-    @Column({width: 512})
+    @Column()
     password: string;    
     
-    @Column({width: 512})
+    @Column()
     address: string;
 }

@@ -35,4 +35,8 @@ export class Utils {
 
         return key;
     }
+
+    public static getRndInteger(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
 }
