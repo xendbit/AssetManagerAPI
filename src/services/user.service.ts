@@ -60,44 +60,21 @@ export class UserService {
     //     }
     // }
 
-    // async getSharesBalance(tokenId: number, id: number): Promise<string> {
-    //     return new Promise(async (resolve, reject) => {
-    //         const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [id]);
-    //         if (dbUser.length === 1) {
-    //             const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-    //             const balance: string = await this._getSharesBalance(tokenId, dbUser[0].address, password);
-    //             resolve(balance);
-    //         } else {
-    //             reject('User with ID not found');
-    //         }
-    //     });
-    // }
-
-    // _getSharesBalance(tokenId: number, address: string, password: string): Promise<string> {
-    //     return new Promise(async (resolve, reject) => {
-    //         await this.web3.eth.personal.unlockAccount(address, password);
-    //         this.logger.log(`Unlocked ${address}`);
-    //         this.AssetManagerContract.methods.ownedShares(tokenId, address).call({ from: address, gasPrice: '0' }).then((res) => {
-    //             this.logger.log(`Shares for token with id: ${tokenId} === ${address}: ${res}`);
-    //             resolve(res);
-    //         }, error => {
-    //             reject(error);
-    //         });
-    //     });
-    // }
-
-    // _getBalance(address: string, password: string): Promise<string> {
-    //     return new Promise(async (resolve, reject) => {
-    //         await this.web3.eth.personal.unlockAccount(address, password);
-    //         this.logger.log(`Unlocked ${address}`);
-    //         this.AssetManagerContract.methods.walletBalance(address).call({ from: address, gasPrice: '0' }).then((res) => {
-    //             this.logger.log(`Xether Balance for ${address}: ${res}`);
-    //             resolve(res);
-    //         }, error => {
-    //             reject(error);
-    //         });
-    //     });
-    // }
+    async ownedShares(tokenId: number, userId: number): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dbUser = await this.userRepository.findOne(userId)
+                if (dbUser !== undefined) {
+                    const balance: number = await this.AssetManagerContract.methods.ownedShares(tokenId, dbUser.address).call({ from: dbUser.address, gasPrice: '0' });
+                    resolve(balance);
+                } else {
+                    throw Error('User with ID not found');
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
     async getBalance(userId: number): Promise<number> {
         return new Promise(async (resolve, reject) => {
