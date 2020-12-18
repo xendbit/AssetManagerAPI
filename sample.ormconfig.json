@@ -1,0 +1,15 @@
+{
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "username": "mysql_user",
+    "password": "mysql_password",
+    "database": "mysql_db",
+    "entities": ["dist/**/*.model{.ts,.js}"],
+    "synchronize": false,
+    "migrations": ["dist/migration/*{.ts,.js}"],
+    "logging": "all",
+    "cli": {
+        "migrationsDir": "migration"
+    }    
+  }
