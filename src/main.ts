@@ -24,7 +24,7 @@ async function bootstrap() {
         type: 'apiKey', // this should be apiKey
         name: 'api-key', // this is the name of the key you expect in header
         in: 'header',
-      }, 'access-key') 
+      }, 'api-key') 
       .build();
   
   const document = SwaggerModule.createDocument(app, options);

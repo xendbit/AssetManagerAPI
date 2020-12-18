@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber } from 'class-validator';
 
-export class SetAccountBalanceRequest {    
+export class FundWalletRequest {    
     @ApiProperty()
     @IsNumber()
     public userId: number;
     @ApiProperty()
     @IsNumber()    
-    public newBalance: number;
+    public amount: number;
 }

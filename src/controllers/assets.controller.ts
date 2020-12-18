@@ -16,7 +16,7 @@ export class AssetsController {
 
     @Post('/issue-asset')
     @Roles('admin')
-    @ApiSecurity('access-key')
+    @ApiSecurity('api-key')
     createNewAsset(@Body() asset: AssetRequest): Promise<TokenShares> {
         return this.assetsService.issueAsset(asset);
     }
@@ -49,14 +49,14 @@ export class AssetsController {
 
     @Post('/buy')
     @Roles('admin')
-    @ApiSecurity('access-key')
+    @ApiSecurity('api-key')
     buyAsset(@Body() assetTranfer: AssetTransferRequest): Promise<number> {
         return this.assetsService.buyAsset(assetTranfer);
     }
 
     @Post('new-order')
     @Roles('admin')
-    @ApiSecurity('access-key')
+    @ApiSecurity('api-key')
     postNewOrder(@Body() or: OrderRequest): Promise<Order> {
         return this.assetsService.postOrder(or);
     }

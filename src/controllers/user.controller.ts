@@ -1,5 +1,5 @@
 import { Roles } from './../decorators/roles.decorator';
-import { SetAccountBalanceRequest } from './../models/request.objects/set-account-balance-request';
+import { FundWalletRequest } from '../models/request.objects/fund.wallet.request';
 import { UserService } from './../services/user.service';
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -14,15 +14,22 @@ export class UserController {
 
     @Post('new-user')
     @Roles('admin')
-    @ApiSecurity('access-key')
+    @ApiSecurity('api-key')
     getNewAddress(@Body() uro: UserRequest): Promise<User> {
         return this.userService.getNewAddress(uro);
     }
 
     @Post('login')
     @Roles('admin')
-    @ApiSecurity('access-key')
+    @ApiSecurity('api-key')
     login(@Body() lr: LoginRequest): Promise<User> {
         return this.userService.login(lr);
+    }
+
+    @Post('fund-wallet')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    fundWallet(@Body() fwr: FundWalletRequest) {
+        return this.userService.fundWallet(fwr);
     }
 }

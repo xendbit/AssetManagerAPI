@@ -6,10 +6,11 @@ import { LoginRequest } from 'src/models/request.objects/login.request';
 import { UserRequest } from 'src/models/request.objects/user.request';
 import { Repository } from 'typeorm';
 import Web3 from 'web3';
-import { SetAccountBalanceRequest } from './../models/request.objects/set-account-balance-request';
+import { FundWalletRequest } from '../models/request.objects/fund.wallet.request';
 import { User } from './../models/user.model';
 import path = require('path');
 import fs = require('fs');
+import { resolve } from 'path';
 
 @Injectable()
 export class UserService {
@@ -57,13 +58,6 @@ export class UserService {
     //             throw error;
     //         });
     //     }
-    // }
-
-    // async fundWallet(from: string, to: string, amount: number, fromPassword: string) {
-    //     await this.web3.eth.personal.unlockAccount(from, fromPassword);
-    //     this.AssetManagerContract.methods.fundWallet(to, amount).send({ from: from, gasPrice: '0' }).then(() => {
-    //         this.logger.log(`${amount} transfered from ${from} to ${to}`);
-    //     })
     // }
 
     // async getSharesBalance(tokenId: number, id: number): Promise<string> {
@@ -120,6 +114,24 @@ export class UserService {
     //         });
     //     });
     // }
+
+    async fundWallet(fwr: FundWalletRequest): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dbUser = await this.userRepository.findOne(fwr.userId);
+                const from = process.env.CONTRACTOR;
+                const fromPassword = AES.decrypt(process.env.CONTRACTOR_PASS, process.env.KEY).toString(enc.Utf8);
+
+                await this.web3.eth.personal.unlockAccount(from, fromPassword);
+                this.AssetManagerContract.methods.fundWallet(dbUser.address, fwr.amount).send({ from: from, gasPrice: '0' }).then(() => {
+                    this.logger.log(`${fwr.amount} transfered from ${from} to ${dbUser.address}`);
+                    resolve('Account funding successful');
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
     async login(uro: LoginRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {
