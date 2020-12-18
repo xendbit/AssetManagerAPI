@@ -9,6 +9,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { TokenShares } from './models/token.shares.model';
+import { ConfigController } from './controllers/config.controller';
+import { ConfigService } from './services/config.service';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { TokenShares } from './models/token.shares.model';
   controllers: [
     AssetsController,
     UserController,
+    ConfigController,
   ],
   providers: [
     {
@@ -27,6 +30,7 @@ import { TokenShares } from './models/token.shares.model';
     },
     AssetsService,
     UserService,
+    ConfigService,
   ],
 })
 export class AppModule { }
