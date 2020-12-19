@@ -16,41 +16,16 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>
 
-    constructor(private ethereumService: EthereumService) {
-        //this.abi = JSON.parse(fs.readFileSync(path.resolve(this.abiPath), 'utf8'));
-        //this.web3.eth.handleRevert = true;
-    }
-
-    // async setAccountBalance(setAccountBalanceRequest: SetAccountBalanceRequest) {
-    //     const dbUser = await this.userRepository.query("SELECT * FROM user WHERE userId = ?", [setAccountBalanceRequest.userId]);
-    //     if (dbUser.length === 1) {
-    //         const password = AES.decrypt(dbUser[0].password, process.env.KEY).toString(enc.Utf8);
-    //         this._getBalance(dbUser[0].address, password).then((res) => {
-    //             const currentBalance = res;
-    //             this.logger.log(`Current Balance: ${currentBalance}`);
-    //             let difference = +currentBalance - setAccountBalanceRequest.newBalance;
-    //             this.logger.log(`Difference: ${difference}`);
-    //             if (difference > 0) {
-    //                 // send difference from credentials to xendcredit
-    //                 this.fundWallet(dbUser[0].address, process.env.CONTRACTOR, difference, password);
-    //             } else if (difference < 0) {
-    //                 difference *= -1;
-    //                 // send difference from xendcredit to credentials
-    //                 this.fundWallet(this.contractor, dbUser[0].address, difference, this.contractorPassword);
-    //             }
-    //         }, error => {
-    //             throw error;
-    //         });
-    //     }
-    // }
+    constructor(private ethereumService: EthereumService) {}
 
     async ownedShares(tokenId: number, userId: number): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const dbUser = await this.userRepository.findOne(userId)
                 if (dbUser !== undefined) {
-                    //const balance: number = await this.AssetManagerContract.methods.ownedShares(tokenId, dbUser.address).call({ from: dbUser.address, gasPrice: '0' });
-                    //resolve(balance);
+                    const address: Address = await this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
+                    const balance: number = await this.ethereumService.getOwnedShares(tokenId, address.address);
+                    resolve(balance);
                 } else {
                     throw Error('User with ID not found');
                 }
@@ -60,13 +35,13 @@ export class UserService {
         });
     }
 
-    async getBalance(userId: number): Promise<number> {
+    async getWalletBalance(userId: number): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const dbUser = await this.userRepository.findOne(userId);
                 if (dbUser !== undefined) {
                     const address: Address = await this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
-                    const balance: number = await this.ethereumService.getBalance(address.address);
+                    const balance: number = await this.ethereumService.getWalletBalance(address.address);
                     resolve(balance);
                 } else {
                     reject('User with ID not found');

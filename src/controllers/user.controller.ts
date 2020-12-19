@@ -35,7 +35,7 @@ export class UserController {
 
     @Get('wallet-balance/:userId')
     getWalletBalance(@Param("userId") userId: number): Promise<number> {
-        return this.userService.getBalance(userId);
+        return this.userService.getWalletBalance(userId);
     }
 
     @Get('owned-shares/:userId/:tokenId')

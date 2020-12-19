@@ -57,7 +57,19 @@ export class EthereumService {
         }
     }
 
-    async getBalance(address: string): Promise<number> {
+    async getOwnedShares(tokenId: number, address: string): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                const balance = await contract.methods.ownedShares(tokenId, address).call();
+                resolve(balance);
+            } catch (error) {
+                reject(error);
+            }
+        });        
+    }
+
+    async getWalletBalance(address: string): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
