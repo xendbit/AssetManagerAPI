@@ -11,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TokenShares } from './models/token.shares.model';
 import { ConfigController } from './controllers/config.controller';
 import { ConfigService } from './services/config.service';
+import { EthereumService } from './services/ethereum.service';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ConfigService } from './services/config.service';
     AssetsService,
     UserService,
     ConfigService,
+    EthereumService,
   ],
 })
 export class AppModule { }

@@ -1,14 +1,11 @@
 import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity("user")
-@Unique("user_idx", ["email", "address"])
+@Unique("user_idx", ["email", "passphrase"])
 export class User {
     @PrimaryGeneratedColumn()
     id?: number;
-    
-    @Column()
-    privateKey: string;
-    
+        
     @Column()
     passphrase: string;
     
@@ -16,8 +13,5 @@ export class User {
     email: string;    
     
     @Column()
-    password: string;    
-    
-    @Column()
-    address: string;
+    password: string;        
 }
