@@ -12,12 +12,13 @@ import { TokenShares } from './models/token.shares.model';
 import { ConfigController } from './controllers/config.controller';
 import { ConfigService } from './services/config.service';
 import { EthereumService } from './services/ethereum.service';
+import { Order } from './models/order.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, TokenShares]),
+    TypeOrmModule.forFeature([User, TokenShares, Order]),
   ],
   controllers: [
     AssetsController,

@@ -18,15 +18,18 @@ export class ExceptionsFilter implements ExceptionFilter {
       message = exception.response.message;
     }
 
-    if(message.indexOf("not found") >= 0) {
+    if (message.indexOf("not found") >= 0) {
       status = HttpStatus.NOT_FOUND;
     }
 
     response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      error: message
+      status: "error",
+      data: {
+        statusCode: status,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        error: message
+      }
     });
   }
 }
