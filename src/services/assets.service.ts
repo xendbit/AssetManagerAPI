@@ -91,36 +91,39 @@ export class AssetsService {
     //     });
     // }
 
-    // async findAssetByTokenId(tokenId: number): Promise<TokenShares> {
-    //     return new Promise(async (resolve, reject) => {
-    //         try {
-    //             const token: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
-    //                             .where("tokenId = :ti", {"ti": tokenId})
-    //                             .getOne();
-    //             if(token === undefined) {
-    //                 throw Error("Token not found");
-    //             } else {
-    //                 resolve(token);
-    //             }
-    //         } catch(error) {
-    //             reject(error);
-    //         }
-    //     })
-    // }
-    // async listAssetsByIssuer(options: IPaginationOptions, issuerId: number): Promise<Pagination<TokenShares>> {
-    //     const issuerUser: User = await this.userRepository.findOne(issuerId);
-    //     if (issuerUser === undefined) {
-    //         throw Error("Issuer not found");
-    //     }
+    async findAssetByTokenId(tokenId: number): Promise<TokenShares> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const token: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
+                                .where("tokenId = :ti", {"ti": tokenId})
+                                .getOne();
+                if(token === undefined) {
+                    throw Error("Token not found");
+                } else {
+                    resolve(token);
+                }
+            } catch(error) {
+                reject(error);
+            }
+        })
+    }
 
-    //     return paginate<TokenShares>(this.tokenSharesRepository, options, {
-    //         issuer: issuerUser.address
-    //     });
-    // }
+    async listAssetsByIssuer(options: IPaginationOptions, issuerId: number): Promise<Pagination<TokenShares>> {
+        const issuerUser: User = await this.userRepository.findOne(issuerId);
+        if (issuerUser === undefined) {
+            throw Error("Issuer not found");
+        }
 
-    // async listAssets(options: IPaginationOptions): Promise<Pagination<TokenShares>> {
-    //     return paginate<TokenShares>(this.tokenSharesRepository, options);
-    // }
+        const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
+
+        return paginate<TokenShares>(this.tokenSharesRepository, options, {
+            issuer: issuerAddress.address
+        });
+    }
+
+    async listAssets(options: IPaginationOptions): Promise<Pagination<TokenShares>> {
+        return paginate<TokenShares>(this.tokenSharesRepository, options);
+    }
 
     async issueAsset(ar: AssetRequest): Promise<TokenShares> {
         return new Promise(async (resolve, reject) => {

@@ -21,31 +21,31 @@ export class AssetsController {
         return this.assetsService.issueAsset(asset);
     }
 
-    // @Get('by-token/:tokenId')
-    // findAssetByTokenId(@Param("tokenId") tokenId: number): Promise<TokenShares> {
-    //     return this.assetsService.findAssetByTokenId(tokenId)
-    // }
+    @Get('by-token/:tokenId')
+    findAssetByTokenId(@Param("tokenId") tokenId: number): Promise<TokenShares> {
+        return this.assetsService.findAssetByTokenId(tokenId)
+    }
 
-    // @Get('by-issuer/:issuerId')
-    // listAssetByIssuer(
-    //     @Query('page') page: number,
-    //     @Query('limit') limit: number,
-    //     @Param("issuerId") issuerId: number): Promise<Pagination<TokenShares>> {
-    //     return this.assetsService.listAssetsByIssuer({
-    //         page,
-    //         limit,
-    //         route: 'http://localhost:8081/v3/assets',
-    //     }, issuerId);
-    // }
+    @Get('by-issuer/:issuerId')
+    listAssetByIssuer(
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Param("issuerId") issuerId: number): Promise<Pagination<TokenShares>> {
+        return this.assetsService.listAssetsByIssuer({
+            page,
+            limit,
+            route: 'http://localhost:8081/v3/assets',
+        }, issuerId);
+    }
 
-    // @Get('')
-    // listAssets(@Query('page') page: number = 1, @Query('limit') limit: number = 10): Promise<Pagination<TokenShares>> {
-    //     return this.assetsService.listAssets({
-    //         page,
-    //         limit,
-    //         route: 'http://localhost:8081/v3/assets',
-    //     });
-    // }
+    @Get('')
+    listAssets(@Query('page') page: number = 1, @Query('limit') limit: number = 10): Promise<Pagination<TokenShares>> {
+        return this.assetsService.listAssets({
+            page,
+            limit,
+            route: 'http://localhost:8081/v3/assets',
+        });
+    }
 
     // @Post('/buy')
     // @Roles('admin')
