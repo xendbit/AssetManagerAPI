@@ -26,7 +26,7 @@ export class EthereumService {
     chain: Common;
 
     constructor() {
-        this.contractorPK = Buffer.from('d50bac9fe4f8b1f67b807b33e4b02c789c5845fb613dd1eccf17d49af681dced', 'hex');
+        this.contractorPK = Buffer.from(process.env.CONTRACTOR_KEY, 'hex');
         this.contractor = process.env.CONTRACTOR;
 
         this.web3 = new Web3(process.env.WEB3_URL);
