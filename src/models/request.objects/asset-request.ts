@@ -16,5 +16,6 @@ export class AssetRequest {
     public issuingPrice: number;
     @IsNotEmpty()
     @ApiProperty()
-    public issuerId: number;    
+    public issuer: number | string;
+    public tokenId?: number;
 }

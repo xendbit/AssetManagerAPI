@@ -4,43 +4,26 @@ import { Repository } from 'typeorm';
 import { User } from './../models/user.model';
 import { AssetTransferRequest } from '../models/request.objects/asset-transfer-request';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import Web3 from 'web3';
-import path = require('path');
-import fs = require('fs');
 import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Utils } from 'src/utils';
 import { Order } from 'src/models/order.model';
 import { AssetRequest } from 'src/models/request.objects/asset-request';
 import { TokenShares } from 'src/models/token.shares.model';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { EthereumService } from './ethereum.service';
 
 @Injectable()
 export class AssetsService {
-    // private contractAddress: string;
-    // private contractor: string;
-    // private contractorPassword: string;
-    // private abiPath: string;
-    // private abi;
-    // private AssetManagerContract;
-    // private web3;
-    // @InjectRepository(User)
-    // private userRepository: Repository<User>
+    @InjectRepository(User)
+    private userRepository: Repository<User>
 
-    // @InjectRepository(TokenShares)
-    // private tokenSharesRepository: Repository<TokenShares>
+    @InjectRepository(TokenShares)
+    private tokenSharesRepository: Repository<TokenShares>
 
-    // private readonly logger = new Logger(AssetsService.name);
+    private readonly logger = new Logger(AssetsService.name);
 
-    // constructor() {
-    //     this.contractAddress = process.env.CONTRACT_ADDRESS;
-    //     this.contractor = process.env.CONTRACTOR;
-    //     this.contractorPassword = AES.decrypt(process.env.CONTRACTOR_PASS, process.env.KEY).toString(enc.Utf8);
-    //     this.abiPath = process.env.ABI_PATH
-    //     this.abi = JSON.parse(fs.readFileSync(path.resolve(this.abiPath), 'utf8'));
-    //     this.web3 = new Web3(process.env.WEB3_URL);
-    //     this.web3.eth.handleRevert = true;
-    //     this.AssetManagerContract = new this.web3.eth.Contract(this.abi.abi, this.contractAddress);
-    // }
+    constructor(private ethereumService: EthereumService) {
+    }
 
     // async postOrder(or: OrderRequest): Promise<Order> {
     //     return new Promise(async (resolve, reject) => {
@@ -139,47 +122,44 @@ export class AssetsService {
     //     return paginate<TokenShares>(this.tokenSharesRepository, options);
     // }
 
-    // async issueAsset(ar: AssetRequest): Promise<TokenShares> {
-    //     return new Promise(async (resolve, reject) => {
-    //         try {
-    //             const issuerUser: User = await this.userRepository.findOne(ar.issuerId);
-    //             if (issuerUser === undefined) {
-    //                 throw new Error(`Issuer with id ${ar.issuerId} not found`);
-    //             }
-    //             const issuer = issuerUser.address;
+    async issueAsset(ar: AssetRequest): Promise<TokenShares> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const issuerUser: User = await this.userRepository.findOne(ar.issuer);
+                if (issuerUser === undefined) {
+                    throw new Error(`Issuer with id ${ar.issuer} not found`);
+                }
 
-    //             await this.web3.eth.personal.unlockAccount(this.contractor, this.contractorPassword);
-    //             this.logger.log(`Account ${this.contractor} unlocked`);
-    //             const tokenId = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
-    //             const assetRequest = {
-    //                 tokenId: tokenId,
-    //                 name: ar.description,
-    //                 symbol: ar.symbol,
-    //                 totalSupply: ar.totalSupply,
-    //                 issuingPrice: ar.issuingPrice,
-    //                 issuer: issuer
-    //             }
-    //             this.logger.log(assetRequest);
-    //             await this.AssetManagerContract.methods.mint(assetRequest).send({ from: this.contractor, gasPrice: '0' });
-    //             this.logger.log(`Asset ${ar.symbol} minted`);
-    //             const res = await this.AssetManagerContract.methods.tokenShares(tokenId).call({ from: this.contractor, gasPrice: '0' });
-    //             let dbTokenShares: TokenShares = {
-    //                 issuer: res.issuer,
-    //                 issuingPrice: res.issuingPrice,
-    //                 description: res.name,
-    //                 owner: res.owner,
-    //                 sharesContract: res.sharesContract,
-    //                 symbol: res.symbol,
-    //                 tokenId: res.tokenId,
-    //                 totalSupply: res.totalSupply
-    //             }
+                const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
 
-    //             dbTokenShares = await this.tokenSharesRepository.save(dbTokenShares);
-    //             dbTokenShares.owner = "Nigerian Stock Exchange";
-    //             resolve(dbTokenShares)
-    //         } catch (error) {
-    //             reject(error);
-    //         }
-    //     });
-    // }
+                const tokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
+                    .where("symbol = :symbol", { symbol: ar.symbol })
+                    .andWhere("issuer = :issuer", { issuer: issuerAddress.address })
+                    .getOne();
+
+                if (tokenShares !== undefined) {
+                    reject('Asset with name and issuer already exists');
+                } else {
+                    const tokenId = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
+                    const assetRequest: AssetRequest = {
+                        tokenId: tokenId,
+                        description: ar.description,
+                        symbol: ar.symbol,
+                        totalSupply: ar.totalSupply,
+                        issuingPrice: ar.issuingPrice,
+                        issuer: issuerAddress.address
+                    }
+                    this.logger.log(assetRequest);
+                    const result = await this.ethereumService.issueToken(assetRequest);
+                    this.logger.log(`Asset ${ar.symbol} minted by transaction ${result}`);
+
+                    let dbTokenShares = await this.ethereumService.getTokenShares(tokenId);
+                    dbTokenShares = await this.tokenSharesRepository.save(dbTokenShares);
+                    resolve(dbTokenShares)
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 }

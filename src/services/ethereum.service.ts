@@ -6,6 +6,8 @@ import Web3 from 'web3';
 import { AES, enc } from 'crypto-js';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import Common from 'ethereumjs-common';
+import { AssetRequest } from 'src/models/request.objects/asset-request';
+import { TokenShares } from 'src/models/token.shares.model';
 
 const path = require('path')
 const fs = require('fs')
@@ -37,6 +39,56 @@ export class EthereumService {
             },
             'istanbul',
         );
+    }
+
+    getTokenShares(tokenId: number): Promise<TokenShares> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                const res = await contract.methods.tokenShares(tokenId).call();
+                this.logger.debug(res);
+                let tokenShares: TokenShares =  {
+                    description: res.description,
+                    issuer: res.issuer,
+                    issuingPrice: res.issuingPrice,
+                    owner: res.owner,
+                    sharesContract: res.sharesContract,
+                    symbol: res.symbol,
+                    tokenId: res.tokenId,
+                    totalSupply: res.totalSupply                
+                }                
+                this.logger.debug(tokenShares);
+                resolve(tokenShares);
+            } catch (error) {
+                reject(error);
+            }
+        });                
+    }
+
+    // minting
+    issueToken(assetRequest: AssetRequest): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+
+                var rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(0),
+                    gasLimit: this.web3.utils.toHex(1000000),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.mint(assetRequest).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                transaction.sign(this.contractorPK);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     getAddressFromEncryptedPK(encrypted: string): Address {

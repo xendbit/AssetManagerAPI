@@ -14,12 +14,12 @@ import { Pagination } from 'nestjs-typeorm-paginate';
 export class AssetsController {
     constructor(private readonly assetsService: AssetsService) { }
 
-    // @Post('/issue-asset')
-    // @Roles('admin')
-    // @ApiSecurity('api-key')
-    // createNewAsset(@Body() asset: AssetRequest): Promise<TokenShares> {
-    //     return this.assetsService.issueAsset(asset);
-    // }
+    @Post('/issue-asset')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    createNewAsset(@Body() asset: AssetRequest): Promise<TokenShares> {
+        return this.assetsService.issueAsset(asset);
+    }
 
     // @Get('by-token/:tokenId')
     // findAssetByTokenId(@Param("tokenId") tokenId: number): Promise<TokenShares> {
