@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './../models/user.model';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Utils } from 'src/utils';
 import { Order } from 'src/models/order.model';
@@ -31,23 +31,23 @@ export class AssetsService {
         return new Promise(async (resolve, reject) => {
             try {
                 const order: Order = await this.orderRepository.findOne(id);
-                if(order === undefined) {
+                if (order === undefined) {
                     throw Error("Order with buyer not found");
                 } else {
                     resolve(order);
                 }
-            } catch(error) {
+            } catch (error) {
                 reject(error);
             }
         })
-    } 
+    }
 
     async listOrders(options: IPaginationOptions): Promise<Pagination<Order>> {
         return paginate<Order>(this.orderRepository, options);
     }
 
     async listOrdersByTokenId(options: IPaginationOptions, tokenId: number): Promise<Pagination<Order>> {
-        const qb = this.orderRepository.createQueryBuilder("order").where("tokenId = :tokenId", {tokenId: tokenId});
+        const qb = this.orderRepository.createQueryBuilder("order").where("tokenId = :tokenId", { tokenId: tokenId });
         return paginate<Order>(qb, options);
     }
 
@@ -59,10 +59,10 @@ export class AssetsService {
 
         const buyerAddress = await this.ethereumService.getAddressFromEncryptedPK(buyer.passphrase);
         const qb = this.orderRepository.createQueryBuilder("order")
-                    .where("buyer = :buyer", {buyer: buyerAddress.address});
+            .where("buyer = :buyer", { buyer: buyerAddress.address });
         return paginate<Order>(qb, options);
-    }    
-    
+    }
+
     async listOrdersBySeller(options: IPaginationOptions, sellerId: number): Promise<Pagination<Order>> {
         const seller: User = await this.userRepository.findOne(sellerId);
         if (seller === undefined) {
@@ -71,9 +71,9 @@ export class AssetsService {
 
         const sellerAddress = await this.ethereumService.getAddressFromEncryptedPK(seller.passphrase);
         const qb = this.orderRepository.createQueryBuilder("order")
-                    .where("seller = :seller", {seller: sellerAddress.address});
+            .where("seller = :seller", { seller: sellerAddress.address });
         return paginate<Order>(qb, options);
-    } 
+    }
 
     async postOrder(or: OrderRequest): Promise<Order> {
         return new Promise(async (resolve, reject) => {
@@ -87,13 +87,13 @@ export class AssetsService {
 
                 const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
                 this.logger.debug(OrderType[or.orderType]);
-                if(OrderType[or.orderType] === 'BUY') {
+                if (OrderType[or.orderType] === 'BUY') {
                     const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
                     const needed = or.amount * or.price;
-                    if(balance < needed) {
+                    if (balance < needed) {
                         reject(`Wallet balance is too low for this transaction.`);
                     }
-                }                
+                }
 
                 await this.ethereumService.postOrder(or, poster);
                 let order = await this.ethereumService.getOrder(key);
@@ -109,14 +109,14 @@ export class AssetsService {
         return new Promise(async (resolve, reject) => {
             try {
                 const token: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
-                                .where("tokenId = :ti", {"ti": tokenId})
-                                .getOne();
-                if(token === undefined) {
+                    .where("tokenId = :ti", { "ti": tokenId })
+                    .getOne();
+                if (token === undefined) {
                     throw Error("Token not found");
                 } else {
                     resolve(token);
                 }
-            } catch(error) {
+            } catch (error) {
                 reject(error);
             }
         })
@@ -131,8 +131,22 @@ export class AssetsService {
         const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
 
         const qb = this.tokenSharesRepository.createQueryBuilder("tokenShares")
-                .where("issuer = :issuer", {issuer: issuerAddress.address});
-        
+            .where("issuer = :issuer", { issuer: issuerAddress.address });
+
+        return paginate<TokenShares>(qb, options);
+    }
+
+    async listAssetsByOwner(options: IPaginationOptions, ownerId: number): Promise<Pagination<TokenShares>> {
+        const ownerUser: User = await this.userRepository.findOne(ownerId);
+        if (ownerUser === undefined) {
+            throw Error("Owner not found");
+        }
+
+        const ownerAddress = await this.ethereumService.getAddressFromEncryptedPK(ownerUser.passphrase);
+
+        const qb = this.tokenSharesRepository.createQueryBuilder("tokenShares")
+            .where("owner = :owner", { owner: ownerAddress.address });
+
         return paginate<TokenShares>(qb, options);
     }
 
@@ -167,8 +181,10 @@ export class AssetsService {
                         issuingPrice: ar.issuingPrice,
                         issuer: issuerAddress.address
                     }
-                    const result = await this.ethereumService.issueToken(assetRequest);
+                    const result = await this.ethereumService.issueToken(assetRequest, true);
                     this.logger.debug(`Asset ${ar.symbol} minted by transaction ${result}`);
+
+                    //transferTokenOwnership
 
                     let dbTokenShares = await this.ethereumService.getTokenShares(tokenId);
                     dbTokenShares = await this.tokenSharesRepository.save(dbTokenShares);

@@ -122,8 +122,34 @@ export class EthereumService {
         });
     }
 
+    async transferTokenOwnership(tokenId: number, newOwner: string | number, previousOwner: Address): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: previousOwner.address });
+
+                const block = await this.web3.eth.getBlock("latest");
+                var rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(0),
+                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.transferTokenOwnership(tokenId, newOwner).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                transaction.sign(this.contractorPK);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     // minting
-    issueToken(assetRequest: AssetRequest): Promise<string> {
+    issueToken(assetRequest: AssetRequest, transferOwnershipToIssuer: boolean): Promise<string> {
         this.logger.debug(assetRequest);
         return new Promise(async (resolve, reject) => {
             try {
@@ -143,6 +169,12 @@ export class EthereumService {
                 const transaction = new Transaction(rawTransaction, { common: this.chain });
                 transaction.sign(this.contractorPK);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                const currentOwner: Address = {
+                    address: this.contractor,
+                    privateKey: this.contractorPK
+                }
+                const transferHash = await this.transferTokenOwnership(assetRequest.tokenId, assetRequest.issuer, currentOwner);
+                this.logger.debug(`Asset ${assetRequest.symbol} transfered from ${this.contractor} to ${assetRequest.issuer} in ${transferHash}`);
                 resolve(reciept.transactionHash);
             } catch (error) {
                 reject(error);

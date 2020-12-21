@@ -38,8 +38,20 @@ export class AssetsController {
         }, issuerId));
     }
 
+    @Get('by-owner/:ownerId')
+    async listAssetByOwner(
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Param("issuerId") ownerId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.assetsService.listAssetsByIssuer({
+            page,
+            limit,
+            route: 'http://localhost:8081/v3/assets',
+        }, ownerId));
+    }    
+
     @Get('')
-    async listAssets(@Query('page') page: number = 1, @Query('limit') limit: number): Promise<Response> {
+    async listAssets(@Query('page') page: number, @Query('limit') limit: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listAssets({
             page,
             limit,
@@ -55,7 +67,7 @@ export class AssetsController {
     }
 
     @Get('orders')
-    async listOrders(@Query('page') page: number = 1, @Query('limit') limit: number): Promise<Response> {
+    async listOrders(@Query('page') page: number, @Query('limit') limit: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listOrders({
             page,
             limit,
