@@ -9,6 +9,7 @@ import { AssetRequest } from 'src/models/request.objects/asset-request';
 import { TokenShares } from 'src/models/token.shares.model';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EthereumService } from './ethereum.service';
+import { OrderType } from 'src/models/enums';
 
 @Injectable()
 export class AssetsService {
@@ -84,6 +85,16 @@ export class AssetsService {
                     reject(`User with id: ${or.userId} not found`);
                 }
 
+                const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
+                this.logger.debug(OrderType[or.orderType]);
+                if(OrderType[or.orderType] === 'BUY') {
+                    const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
+                    const needed = or.amount * or.price;
+                    if(balance < needed) {
+                        reject(`Wallet balance is too low for this transaction.`);
+                    }
+                }                
+
                 await this.ethereumService.postOrder(or, poster);
                 let order = await this.ethereumService.getOrder(key);
                 order = await this.orderRepository.save(order);
@@ -158,9 +169,8 @@ export class AssetsService {
                         issuingPrice: ar.issuingPrice,
                         issuer: issuerAddress.address
                     }
-                    this.logger.log(assetRequest);
                     const result = await this.ethereumService.issueToken(assetRequest);
-                    this.logger.log(`Asset ${ar.symbol} minted by transaction ${result}`);
+                    this.logger.debug(`Asset ${ar.symbol} minted by transaction ${result}`);
 
                     let dbTokenShares = await this.ethereumService.getTokenShares(tokenId);
                     dbTokenShares = await this.tokenSharesRepository.save(dbTokenShares);

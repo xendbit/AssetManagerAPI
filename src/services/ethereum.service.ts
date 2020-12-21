@@ -125,6 +125,7 @@ export class EthereumService {
 
     // minting
     issueToken(assetRequest: AssetRequest): Promise<string> {
+        this.logger.debug(assetRequest);
         return new Promise(async (resolve, reject) => {
             try {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
