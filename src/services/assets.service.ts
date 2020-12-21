@@ -130,8 +130,6 @@ export class AssetsService {
 
         const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
 
-        this.logger.debug(`Issuer Address: ${issuerAddress.address}`);
-
         const qb = this.tokenSharesRepository.createQueryBuilder("tokenShares")
                 .where("issuer = :issuer", {issuer: issuerAddress.address});
         

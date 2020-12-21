@@ -104,7 +104,6 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const res = await contract.methods.tokenShares(tokenId).call();
-                this.logger.debug(res);
                 let tokenShares: TokenShares = {
                     description: res.description,
                     issuer: res.issuer,
@@ -115,7 +114,6 @@ export class EthereumService {
                     tokenId: res.tokenId,
                     totalSupply: res.totalSupply
                 }
-                this.logger.debug(tokenShares);
                 resolve(tokenShares);
             } catch (error) {
                 reject(error);
@@ -151,7 +149,6 @@ export class EthereumService {
     }
 
     getAddressFromEncryptedPK(encrypted: string): Address {
-        this.logger.debug(encrypted);
         const passphrase = AES.decrypt(encrypted, process.env.KEY).toString(enc.Utf8);
         return this.getAddress(passphrase);
     }
