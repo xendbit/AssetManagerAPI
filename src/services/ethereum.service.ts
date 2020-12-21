@@ -80,9 +80,10 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
 
+                const block = await this.web3.eth.getBlock("latest");
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(0),
-                    gasLimit: this.web3.utils.toHex(1000000000),
+                    gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.postOrder(or).encodeABI(),
@@ -129,9 +130,10 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
 
+                const block = await this.web3.eth.getBlock("latest");
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(0),
-                    gasLimit: this.web3.utils.toHex(1000000),
+                    gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.mint(assetRequest).encodeABI(),
@@ -196,9 +198,10 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
 
+                const block = await this.web3.eth.getBlock("latest");
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(0),
-                    gasLimit: this.web3.utils.toHex(210000),
+                    gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.fundWallet(recipient, amountHex).encodeABI(),
