@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber } from 'class-validator';
-import { OrderType, OrderStrategy } from '../enums';
+import { OrderStrategy, OrderType } from 'src/models/enums';
 
 export class OrderRequest {
     @IsNotEmpty()

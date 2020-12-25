@@ -13,17 +13,21 @@ import { ConfigController } from './controllers/config.controller';
 import { ConfigService } from './services/config.service';
 import { EthereumService } from './services/ethereum.service';
 import { Order } from './models/order.model';
+import { AdminService } from './services/admin.service';
+import { Admin } from './models/admin.model';
+import { AdminController } from './controllers/admin.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, TokenShares, Order]),
+    TypeOrmModule.forFeature([User, TokenShares, Order, Admin]),
   ],
   controllers: [
     AssetsController,
     UserController,
     ConfigController,
+    AdminController,
   ],
   providers: [
     {
@@ -34,6 +38,7 @@ import { Order } from './models/order.model';
     UserService,
     ConfigService,
     EthereumService,
+    AdminService,
   ],
 })
 export class AppModule { }

@@ -18,14 +18,7 @@ export class UserController {
     async newUser(@Body() uro: UserRequest): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.getNewAddress(uro));
     }
-
-    @Post('new-admin')
-    @Roles('admin')
-    @ApiSecurity('api-key')
-    async newAdmin(@Body() uro: UserRequest): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.userService.getNewAddress(uro));
-    }    
-
+    
     @Post('login')
     @Roles('admin')
     @ApiSecurity('api-key')

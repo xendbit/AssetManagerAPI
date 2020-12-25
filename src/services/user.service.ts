@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES, enc } from 'crypto-js';
+import { AdminRequest } from 'src/request.objects/admin.request';
 import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
 import { LoginRequest } from 'src/request.objects/login.request';
 import { UserRequest } from 'src/request.objects/user.request';
@@ -91,7 +92,7 @@ export class UserService {
             }
         });
     }
-
+    
     async getNewAddress(uro: UserRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
