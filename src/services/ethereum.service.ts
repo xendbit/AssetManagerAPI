@@ -113,7 +113,8 @@ export class EthereumService {
                     sharesContract: res.sharesContract,
                     symbol: res.symbol,
                     tokenId: res.tokenId,
-                    totalSupply: res.totalSupply
+                    totalSupply: res.totalSupply,
+                    approved: 0
                 }
                 resolve(tokenShares);
             } catch (error) {

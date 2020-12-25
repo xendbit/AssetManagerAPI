@@ -31,4 +31,7 @@ export class TokenShares {
 
     @Column()
     issuer: string;
+
+    @Column({type: "tinyint", width: 1})
+    approved: number = null;
 }
