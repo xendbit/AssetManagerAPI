@@ -1,4 +1,5 @@
-import { OrderRequest } from "./models/request.objects/order.requet";
+import { OrderRequest } from "./request.objects/order.request";
+
 const web3Utils = require('web3-utils');
 
 export class Utils {

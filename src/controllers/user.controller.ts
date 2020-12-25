@@ -1,11 +1,11 @@
 import { Roles } from './../decorators/roles.decorator';
-import { FundWalletRequest } from '../models/request.objects/fund.wallet.request';
 import { UserService } from './../services/user.service';
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { UserRequest } from 'src/models/request.objects/user.request';
-import { LoginRequest } from 'src/models/request.objects/login.request';
 import { Response, ResponseUtils } from 'src/utils';
+import { UserRequest } from 'src/request.objects/user.request';
+import { LoginRequest } from 'src/request.objects/login.request';
+import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
 
 @ApiTags('user')
 @Controller('user')
@@ -18,6 +18,13 @@ export class UserController {
     async newUser(@Body() uro: UserRequest): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.getNewAddress(uro));
     }
+
+    @Post('new-admin')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async newAdmin(@Body() uro: UserRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.getNewAddress(uro));
+    }    
 
     @Post('login')
     @Roles('admin')

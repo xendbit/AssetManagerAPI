@@ -2,14 +2,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './../models/user.model';
 import { Injectable, Logger } from '@nestjs/common';
-import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Utils } from 'src/utils';
 import { Order } from 'src/models/order.model';
-import { AssetRequest } from 'src/models/request.objects/asset-request';
 import { TokenShares } from 'src/models/token.shares.model';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EthereumService } from './ethereum.service';
 import { OrderType } from 'src/models/enums';
+import { OrderRequest } from 'src/request.objects/order.request';
+import { AssetRequest } from 'src/request.objects/asset-request';
 
 @Injectable()
 export class AssetsService {

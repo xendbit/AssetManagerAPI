@@ -6,11 +6,11 @@ import Web3 from 'web3';
 import { AES, enc } from 'crypto-js';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import Common from 'ethereumjs-common';
-import { AssetRequest } from 'src/models/request.objects/asset-request';
 import { TokenShares } from 'src/models/token.shares.model';
-import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Order } from 'src/models/order.model';
 import { User } from 'src/models/user.model';
+import { OrderRequest } from 'src/request.objects/order.request';
+import { AssetRequest } from 'src/request.objects/asset-request';
 
 const path = require('path')
 const fs = require('fs')
@@ -169,12 +169,6 @@ export class EthereumService {
                 const transaction = new Transaction(rawTransaction, { common: this.chain });
                 transaction.sign(this.contractorPK);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
-                const currentOwner: Address = {
-                    address: this.contractor,
-                    privateKey: this.contractorPK
-                }
-                const transferHash = await this.transferTokenOwnership(assetRequest.tokenId, assetRequest.issuer, currentOwner);
-                this.logger.debug(`Asset ${assetRequest.symbol} transfered from ${this.contractor} to ${assetRequest.issuer} in ${transferHash}`);
                 resolve(reciept.transactionHash);
             } catch (error) {
                 reject(error);

@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES, enc } from 'crypto-js';
-import { LoginRequest } from 'src/models/request.objects/login.request';
-import { UserRequest } from 'src/models/request.objects/user.request';
+import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
+import { LoginRequest } from 'src/request.objects/login.request';
+import { UserRequest } from 'src/request.objects/user.request';
 import { Repository } from 'typeorm';
-import { FundWalletRequest } from '../models/request.objects/fund.wallet.request';
 import { User } from './../models/user.model';
 import { Address, EthereumService } from './ethereum.service';
 

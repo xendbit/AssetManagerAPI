@@ -2,12 +2,10 @@ import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { AssetsService } from '../services/assets.service';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
-import { OrderRequest } from 'src/models/request.objects/order.requet';
 import { Order } from 'src/models/order.model';
-import { TokenShares } from 'src/models/token.shares.model';
-import { AssetRequest } from 'src/models/request.objects/asset-request';
-import { Pagination } from 'nestjs-typeorm-paginate';
 import { Response, ResponseUtils } from 'src/utils';
+import { AssetRequest } from 'src/request.objects/asset-request';
+import { OrderRequest } from 'src/request.objects/order.request';
 
 @Controller('/assets')
 @ApiTags('asset-manager')
