@@ -23,7 +23,7 @@ export class AdminService {
         this.logger.debug(`status is : ${status}`);
         return new Promise(async (resolve, reject) => {
             try {
-                const ts: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
+                let ts: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
                         .where("tokenId = :tokenId", {tokenId: tokenId})
                         .getOne();
 
@@ -34,7 +34,7 @@ export class AdminService {
                     const numStatus = status ? 1 : 0;
                     if(ts.approved !== numStatus) {
                         ts.approved = numStatus;
-                        this.tokenSharesRepository.save(ts);
+                        ts = await this.tokenSharesRepository.save(ts);
                     }
 
                     resolve(status);

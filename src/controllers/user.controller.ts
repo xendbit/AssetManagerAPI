@@ -6,6 +6,7 @@ import { Response, ResponseUtils } from 'src/utils';
 import { UserRequest } from 'src/request.objects/user.request';
 import { LoginRequest } from 'src/request.objects/login.request';
 import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
+import { PasswordResetRequest } from 'src/request.objects/password.reset.request';
 
 @ApiTags('user')
 @Controller('user')
@@ -18,7 +19,7 @@ export class UserController {
     async newUser(@Body() uro: UserRequest): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.getNewAddress(uro));
     }
-    
+
     @Post('login')
     @Roles('admin')
     @ApiSecurity('api-key')
@@ -41,5 +42,19 @@ export class UserController {
     @Get('owned-shares/:userId/:tokenId')
     async ownedShares(@Param("userId") userId: number, @Param("tokenId") tokenId: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.ownedShares(tokenId, userId));
+    }    
+
+    @Post('request-password-reset-token')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async requestPasswordToken(@Body() pro: PasswordResetRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.requestPasswordToken(pro));
+    }
+
+    @Post('change-password')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async changePassword(@Body() pro: PasswordResetRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.changePassword(pro));
     }    
 }

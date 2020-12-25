@@ -16,12 +16,21 @@ import { Order } from './models/order.model';
 import { AdminService } from './services/admin.service';
 import { Admin } from './models/admin.model';
 import { AdminController } from './controllers/admin.controller';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { EmailService } from './services/email.service';
+import { PasswordReset } from './models/password.reset.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, TokenShares, Order, Admin]),
+    TypeOrmModule.forFeature([User, TokenShares, Order, Admin, PasswordReset]),
+    MailerModule.forRoot({  
+      transport: process.env.EMAIL_URL,
+      defaults: {
+        from: process.env.EMAIL_FROM,
+      },
+    }), 
   ],
   controllers: [
     AssetsController,
@@ -39,6 +48,7 @@ import { AdminController } from './controllers/admin.controller';
     ConfigService,
     EthereumService,
     AdminService,
+    EmailService,
   ],
 })
 export class AppModule { }

@@ -21,7 +21,6 @@ export class AuthGuard implements CanActivate {
 
   matchRoles(roles: string[], handler: string, authHeader: string): boolean {
     let decrypted = "";
-    this.logger.log(`authHeader: ${authHeader}`);
     this.logger.log(`roles: ${roles}`);
     if (authHeader !== undefined) {
       decrypted = AES.decrypt(authHeader, process.env.KEY).toString(enc.Utf8);

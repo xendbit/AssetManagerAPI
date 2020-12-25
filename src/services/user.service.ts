@@ -1,23 +1,103 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
-import { AES, enc } from 'crypto-js';
-import { AdminRequest } from 'src/request.objects/admin.request';
+import { AES } from 'crypto-js';
+import { PasswordReset } from 'src/models/password.reset.model';
 import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
 import { LoginRequest } from 'src/request.objects/login.request';
+import { PasswordResetRequest } from 'src/request.objects/password.reset.request';
 import { UserRequest } from 'src/request.objects/user.request';
+import { Utils } from 'src/utils';
 import { Repository } from 'typeorm';
 import { User } from './../models/user.model';
+import { EmailService } from './email.service';
 import { Address, EthereumService } from './ethereum.service';
 
 @Injectable()
 export class UserService {
     private readonly logger = new Logger(UserService.name);
-    
+
     @InjectRepository(User)
     private userRepository: Repository<User>
 
-    constructor(private ethereumService: EthereumService) {}
+    @InjectRepository(PasswordReset)
+    private passwordResetRepository: Repository<PasswordReset>
+
+    constructor(private ethereumService: EthereumService, private emailService: EmailService) { }
+
+    async changePassword(pro: PasswordResetRequest): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let dbUser = await this.userRepository.createQueryBuilder("user")
+                    .where("email = :email", { email: pro.email })
+                    .getOne();
+                if (dbUser === undefined) {
+                    reject(`User with email address ${pro.email} not found`);
+                } else {
+                    let pr = await this.passwordResetRepository.createQueryBuilder("passwordReset")
+                        .where("userId = :userId", { userId: dbUser.id })
+                        .andWhere("expiry > :expiry", { expiry: new Date().getTime() })
+                        .andWhere("token = :token", { token: pro.token })
+                        .getOne();
+
+                    if (pr === undefined) {
+                        reject(`Token not found or expired`);
+                    } else {
+                        const salt = genSaltSync(12, 'a');
+                        const passwordHashed = hashSync(pro.newPassword, salt);
+                        dbUser.password = passwordHashed;
+                        dbUser = await this.userRepository.save(dbUser);
+
+                        pr.expiry = new Date().getTime();
+                        pr = await this.passwordResetRepository.save(pr);
+
+                        resolve(`Password succesfully changed`);
+                    }
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async requestPasswordToken(pro: PasswordResetRequest): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dbUser = await this.userRepository.createQueryBuilder("user")
+                    .where("email = :email", { email: pro.email })
+                    .getOne();
+                if (dbUser === undefined) {
+                    reject(`User with email address ${pro.email} not found`);
+                } else {
+                    let pr = await this.passwordResetRepository.createQueryBuilder("passwordReset")
+                        .where("userId = :userId", { userId: dbUser.id })
+                        .andWhere("expiry > :expiry", { expiry: new Date().getTime() })
+                        .getOne();
+
+                    let token = 0;
+                    if (pr === undefined) {
+                        token = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
+                        const thirtyMinutes = new Date().getTime() + (+process.env.RESET_TOKEN_EXPIRY * 60 * 1000);
+                        pr = {
+                            expiry: thirtyMinutes,
+                            token: token,
+                            userId: dbUser.id,
+                        }
+                        pr = await this.passwordResetRepository.save(pr);
+                    } else {
+                        token = pr.token;
+                    }
+
+                    await this.emailService.sendPasswordResetToken(token + "", pro.email);
+
+                    resolve("Password Reset Token sent successfully");
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+    }
 
     async ownedShares(tokenId: number, userId: number): Promise<number> {
         return new Promise(async (resolve, reject) => {
@@ -62,7 +142,7 @@ export class UserService {
                 }
 
                 const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
-                const result = await this.ethereumService.fundWallet(address.address, fwr.amount);                
+                const result = await this.ethereumService.fundWallet(address.address, fwr.amount);
                 resolve(result);
             } catch (error) {
                 reject(error);
@@ -92,7 +172,7 @@ export class UserService {
             }
         });
     }
-    
+
     async getNewAddress(uro: UserRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
