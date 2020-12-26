@@ -4,7 +4,7 @@ export class PasswordResetRequest {
     @ApiProperty()
     email?: string;
     @ApiProperty()
-    token?: string;    
+    token?: number;    
     @ApiProperty()
     newPassword?: string;
 }

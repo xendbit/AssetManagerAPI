@@ -32,9 +32,10 @@ export class AssetsService {
             try {
                 const order: Order = await this.orderRepository.findOne(id);
                 if (order === undefined) {
-                    throw Error("Order with buyer not found");
+                    throw Error("Order with ID not found");
                 } else {
-                    resolve(order);
+                    let blockOrder = await this.ethereumService.getOrder(order.key);
+                    resolve(blockOrder);
                 }
             } catch (error) {
                 reject(error);
