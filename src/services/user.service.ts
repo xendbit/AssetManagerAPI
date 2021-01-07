@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES } from 'crypto-js';
+import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { PasswordReset } from 'src/models/password.reset.model';
 import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
 import { LoginRequest } from 'src/request.objects/login.request';
@@ -23,8 +24,23 @@ export class UserService {
     @InjectRepository(PasswordReset)
     private passwordResetRepository: Repository<PasswordReset>
 
-    constructor(private ethereumService: EthereumService, private emailService: EmailService) { }
+    constructor(private ethereumService: EthereumService, private emailService: EmailService) {         
+    }
 
+    async listUsers(options: IPaginationOptions): Promise<Pagination<User>> {
+        return paginate<User>(this.userRepository, options);
+    }
+
+    async getUserById(id: number): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                resolve(await this.userRepository.findOne(id));
+            } catch (error) {
+                reject(error);
+            }
+        });                
+    }
+    
     async changePassword(pro: PasswordResetRequest): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -191,7 +207,8 @@ export class UserService {
                 const user: User = {
                     password: passwordHashed,
                     passphrase: passphraseHashed,
-                    email: uro.email
+                    email: uro.email,
+                    role: uro.role
                 }
 
                 dbUser = await this.userRepository.save(user);

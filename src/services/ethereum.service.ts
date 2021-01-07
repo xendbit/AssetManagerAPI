@@ -6,7 +6,7 @@ import Web3 from 'web3';
 import { AES, enc } from 'crypto-js';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import Common from 'ethereumjs-common';
-import { TokenShares } from 'src/models/token.shares.model';
+import { TokenShares } from 'src/models/token.shares';
 import { Order } from 'src/models/order.model';
 import { User } from 'src/models/user.model';
 import { OrderRequest } from 'src/request.objects/order.request';
@@ -30,8 +30,7 @@ export class EthereumService {
         this.contractor = process.env.CONTRACTOR;
 
         this.web3 = new Web3(process.env.WEB3_URL);
-        const abi = JSON.parse(fs.readFileSync(path.resolve(process.env.ABI_PATH), 'utf8'));
-        this.abi = abi.abi;
+        this.abi = JSON.parse(fs.readFileSync(path.resolve('AssetManagerV2.json'), 'utf8')).abi;
         this.contractAddress = process.env.CONTRACT_ADDRESS;
         this.chain = Common.forCustomChain(
             'mainnet',
@@ -150,8 +149,17 @@ export class EthereumService {
     }
 
     // minting
-    issueToken(assetRequest: AssetRequest, transferOwnershipToIssuer: boolean): Promise<string> {
-        this.logger.debug(assetRequest);
+    issueToken(ar: AssetRequest, transferOwnershipToIssuer: boolean): Promise<string> {        
+        const contractAssetRequest = {
+            tokenId: ar.tokenId,
+            description: ar.description,
+            symbol: ar.symbol,
+            totalSupply: ar.totalSupply,
+            issuingPrice: ar.issuingPrice,
+            issuer: ar.issuer
+        }
+
+        this.logger.debug(contractAssetRequest);
         return new Promise(async (resolve, reject) => {
             try {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
@@ -163,7 +171,7 @@ export class EthereumService {
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.contractAddress,
                     value: "0x0",
-                    data: contract.methods.mint(assetRequest).encodeABI(),
+                    data: contract.methods.mint(contractAssetRequest).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 

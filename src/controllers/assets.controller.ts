@@ -12,7 +12,7 @@ import { OrderRequest } from 'src/request.objects/order.request';
 export class AssetsController {
     constructor(private readonly assetsService: AssetsService) { }
 
-    @Post('/issue-asset')
+    @Post('issue-asset')
     @Roles('admin')
     @ApiSecurity('api-key')
     async createNewAsset(@Body() asset: AssetRequest): Promise<Response> {
@@ -32,7 +32,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listAssetsByIssuer({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }, issuerId));
     }
 
@@ -44,7 +44,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listAssetsByIssuer({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }, ownerId));
     }    
 
@@ -53,7 +53,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listAssets({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }));
     }
 
@@ -69,7 +69,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listOrders({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }));
     }
 
@@ -78,7 +78,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listOrdersByBuyer({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }, buyerId));
     }
 
@@ -87,7 +87,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listOrdersBySeller({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }, sellerId));
     }
 
@@ -96,7 +96,7 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.assetsService.listOrdersByTokenId({
             page,
             limit,
-            route: 'http://localhost:8081/v3/assets',
+            route: '/v3/assets',
         }, tokenId));
     }
 

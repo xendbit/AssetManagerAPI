@@ -8,7 +8,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "postbuild": "echo 'Calling PostBuild' && cp AssetManager.json dist/",
+    "postbuild": "echo 'Calling PostBuild' &&  cp ../AssetManager/build/contracts/AssetManagerV2.json dist/AssetManagerV2.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "NODE_ENV=dev && nest start --watch",

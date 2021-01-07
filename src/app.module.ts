@@ -8,7 +8,7 @@ import { AssetsService } from './services/assets.service';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { TokenShares } from './models/token.shares.model';
+import { TokenShares } from './models/token.shares';
 import { ConfigController } from './controllers/config.controller';
 import { ConfigService } from './services/config.service';
 import { EthereumService } from './services/ethereum.service';
@@ -19,12 +19,14 @@ import { AdminController } from './controllers/admin.controller';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailService } from './services/email.service';
 import { PasswordReset } from './models/password.reset.model';
+import { Asset } from './models/asset.model';
+import { ImageService } from './services/image.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, TokenShares, Order, Admin, PasswordReset]),
+    TypeOrmModule.forFeature([User, Asset, Order, Admin, PasswordReset]),
     MailerModule.forRoot({  
       transport: process.env.EMAIL_URL,
       defaults: {
@@ -49,6 +51,7 @@ import { PasswordReset } from './models/password.reset.model';
     EthereumService,
     AdminService,
     EmailService,
+    ImageService,
   ],
 })
 export class AppModule { }

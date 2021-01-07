@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Market, OrderStatus, OrderStrategy, OrderType, Role } from "src/models/enums";
 
 @Injectable()
 export class ConfigService {
@@ -11,62 +12,91 @@ export class ConfigService {
                 {
                     type: 'OrderType',
                     name: 'BUY',
-                    code: 0,
+                    code: OrderType.BUY,
                 },
                 {
                     type: 'OrderType',
                     name: 'SELL',
-                    code: 1,
+                    code: OrderType.SELL,
                 },   
                 {
                     type: 'OrderStrategy',
                     name: 'Good Till Cancel',
-                    code: 0,
+                    code: OrderStrategy.GOOD_TILL_CANCEL,
                 },
                 {
                     type: 'OrderStrategy',
                     name: 'All Or Nothing',
-                    code: 1,
+                    code: OrderStrategy.ALL_OR_NOTHING,
                 },
                 {
                     type: 'OrderStrategy',
                     name: 'Good Till Day',
-                    code: 2
+                    code: OrderStrategy.GOOD_TILL_DAY,
                 },         
                 {
                     type: 'OrderStrategy',
                     name: 'Good Till Month',
-                    code: 3
+                    code: OrderStrategy.GOOD_TILL_MONTH,
                 },
                 {
                     type: 'OrderStrategy',
                     name: 'Market Order',
-                    code: 4
+                    code: OrderStrategy.MARKET_ORDER,
                 },         
                 {
                     type: 'OrderStatus',
                     name: 'New',
-                    code: 0
+                    code: OrderStatus.NEW,
                 },
                 {
                     type: 'OrderStatus',
                     name: 'Matched',
-                    code: 1
+                    code: OrderStatus.MATCHED
                 },         
                 {
                     type: 'OrderStatus',
                     name: 'Deleted',
-                    code: 2
+                    code: OrderStatus.DELETED,
                 },         
                 {
                     type: 'OrderStatus',
                     name: 'Expired',
-                    code: 3
-                },                                                                                                                                          
+                    code: OrderStatus.EXPIRED
+                },                           
+                {
+                    type: 'Market',
+                    name: 'Primary',
+                    code: Market.PRIMARY,
+                }, 
+                {
+                    type: 'Market',
+                    name: 'Secondary',
+                    code: Market.SECONDARY,                    
+                },
+                {
+                    type: 'Role',
+                    name: 'Investor',
+                    code: Role.INVESTOR,
+                },
+                {
+                    type: 'Role',
+                    name: 'ADmin',
+                    code: Role.ADMIN,
+                },                  
+                {
+                    type: 'Role',
+                    name: 'Issuer',
+                    code: Role.ISSUER,
+                },                                                                                                                    
             ]
 
             resolve(orderTypes);
         });
+    }
+
+    getAssetManagerAbi(): string {
+        return 
     }
 }
 

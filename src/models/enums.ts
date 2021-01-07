@@ -16,3 +16,14 @@ export enum OrderStatus {
     DELETED = 2,
     EXPIRED = 3
 }
+
+export enum Market {
+    PRIMARY = 0,
+    SECONDARY = 1
+}
+
+export enum Role {
+    INVESTOR = 0,
+    ADMIN = 1,
+    ISSUER = 2,
+}

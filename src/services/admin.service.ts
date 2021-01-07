@@ -4,7 +4,8 @@ import { genSaltSync, hashSync } from 'bcrypt';
 import { AES } from 'crypto-js';
 import { stat } from 'fs';
 import { Admin } from 'src/models/admin.model';
-import { TokenShares } from 'src/models/token.shares.model';
+import { Asset } from 'src/models/asset.model';
+import { TokenShares } from 'src/models/token.shares';
 import { AdminRequest } from 'src/request.objects/admin.request';
 import { Repository } from 'typeorm';
 
@@ -14,8 +15,9 @@ export class AdminService {
     
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>
-    @InjectRepository(TokenShares)
-    private tokenSharesRepository: Repository<TokenShares>
+
+    @InjectRepository(Asset)
+    private assetRepository: Repository<Asset>
 
     constructor() {}
 
@@ -23,18 +25,18 @@ export class AdminService {
         this.logger.debug(`status is : ${status}`);
         return new Promise(async (resolve, reject) => {
             try {
-                let ts: TokenShares = await this.tokenSharesRepository.createQueryBuilder("tokenShares")
+                let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
                         .where("tokenId = :tokenId", {tokenId: tokenId})
                         .getOne();
 
-                if(ts === undefined) {
-                    reject(`Token with id ${tokenId} not found`);
+                if(asset === undefined) {
+                    reject(`Asset with token-id ${tokenId} not found`);
                 } else {
-                    this.logger.debug(ts);
-                    const numStatus = status ? 1 : 0;
-                    if(ts.approved !== numStatus) {
-                        ts.approved = numStatus;
-                        ts = await this.tokenSharesRepository.save(ts);
+                    this.logger.debug(asset);
+                    const numStatus = status;
+                    if(asset.approved !== numStatus) {
+                        asset.approved = numStatus;
+                        asset = await this.assetRepository.save(asset);
                     }
 
                     resolve(status);

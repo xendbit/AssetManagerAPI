@@ -1,6 +1,6 @@
 import { Roles } from './../decorators/roles.decorator';
 import { UserService } from './../services/user.service';
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Response, ResponseUtils } from 'src/utils';
 import { UserRequest } from 'src/request.objects/user.request';
@@ -12,6 +12,20 @@ import { PasswordResetRequest } from 'src/request.objects/password.reset.request
 @Controller('user')
 export class UserController {
     constructor(private userService: UserService) {}
+
+    @Get('')
+    async listUsers(@Query('page') page: number, @Query('limit') limit: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.listUsers({
+            page,
+            limit,
+            route: '/v3/users'
+        }));
+    }
+
+    @Get(':id')
+    async getUser(@Param('id') id: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.getUserById(id));
+    }
 
     @Post('new-user')
     @Roles('admin')

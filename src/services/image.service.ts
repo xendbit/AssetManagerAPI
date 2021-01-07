@@ -12,8 +12,8 @@ export class ImageService {
         });
     }
 
-    async uploadCustomerIdImage(idImage: string): Promise<string> {
-        const response: UploadApiResponse = await v2.uploader.upload(idImage);
+    async uploadAssetImage(b64Image: string): Promise<string> {
+        const response: UploadApiResponse = await v2.uploader.upload(b64Image);
         return response.secure_url;
     }
 }
