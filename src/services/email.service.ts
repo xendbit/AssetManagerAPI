@@ -8,7 +8,7 @@ export class EmailService {
     constructor(private readonly mailerService: MailerService) {}
 
     async sendPasswordResetToken(token: string, to: string) {
-        let content = readFileSync('/etc/xendart/password_reset_token.html', 'utf8');                        
+        let content = readFileSync('src/etc/password_reset_token.html', 'utf8');                        
         content = content.replace("#token", token).replace("#time", process.env.RESET_TOKEN_EXPIRY);
         this.logger.debug(content);
         const subjectLine = "Password Reset Token";

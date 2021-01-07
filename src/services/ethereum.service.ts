@@ -30,7 +30,7 @@ export class EthereumService {
         this.contractor = process.env.CONTRACTOR;
 
         this.web3 = new Web3(process.env.WEB3_URL);
-        this.abi = JSON.parse(fs.readFileSync(path.resolve('AssetManagerV2.json'), 'utf8')).abi;
+        this.abi = JSON.parse(fs.readFileSync(path.resolve('src/etc/AssetManagerV2.json'), 'utf8')).abi;
         this.contractAddress = process.env.CONTRACT_ADDRESS;
         this.chain = Common.forCustomChain(
             'mainnet',
