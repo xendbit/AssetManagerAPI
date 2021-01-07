@@ -10,13 +10,6 @@ import { Response, ResponseUtils } from 'src/utils';
 export class AdminController {
     constructor(private adminService: AdminService) {}    
 
-    @Post('new-admin')
-    @Roles('admin')
-    @ApiSecurity('api-key')
-    async newAdmin(@Body() aro: AdminRequest): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.adminService.newAdmin(aro));
-    } 
-
     @Post('change-approval-status/:tokenId/:status')
     @Roles('admin')
     @ApiSecurity('api-key')
