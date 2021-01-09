@@ -52,16 +52,16 @@ export class EthereumService {
                 const order: Order = {
                     amountRemaining: blOrder.amountRemaining,
                     buyer: blOrder.buyer,
-                    goodUntil: blOrder.goodUntil,
+                    goodUntil: blOrder.goodUntil * 1000,
                     key: key,
-                    orderDate: blOrder.orderDate,
+                    orderDate: blOrder.orderDate * 1000,
                     orderStrategy: blOrder.orderStrategy,
                     orderType: blOrder.orderType,
                     originalAmount: blOrder.originalAmount,
                     price: blOrder.price,
                     seller: blOrder.seller,
                     status: blOrder.status,
-                    statusDate: blOrder.statusDate,
+                    statusDate: blOrder.statusDate * 1000,
                     tokenId: blOrder.tokenId,
                 };
 
@@ -72,7 +72,9 @@ export class EthereumService {
         });
     }
 
-    postOrder(or: OrderRequest, user: User): Promise<String> {
+    postOrder(orderRequest: OrderRequest, user: User): Promise<String> {
+        const or: OrderRequest = {...orderRequest};
+        or.goodUntil = new Date(or.goodUntil).getTime() / 1000;
         return new Promise(async (resolve, reject) => {
             try {
                 const poster = this.getAddressFromEncryptedPK(user.passphrase);
@@ -202,6 +204,7 @@ export class EthereumService {
         var path = "m/44'/60'/0'/0/0";
         const addrNode: EthereumHDKey = root.derivePath(path);
         const pk: Buffer = addrNode.getWallet().getPrivateKey();
+        this.logger.debug(addrNode.getWallet().getAddressString());
         return {
             address: addrNode.getWallet().getAddressString(),
             privateKey: pk
