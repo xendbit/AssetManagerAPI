@@ -181,37 +181,25 @@ export class AssetsService {
                     const tokenId = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
                     ar.tokenId = tokenId;
                     ar.issuer = issuerAddress.address;
+                    const result = await this.ethereumService.issueToken(ar, true);
+                    let tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
                     const imageUrl: string = await this.imageService.uploadAssetImage(ar.image);
                     const asset: Asset = {                         
                         tokenId: tokenId, 
                         issuer: issuerAddress.address,
                         imageUrl: imageUrl,
                         approved: false,
-                        owner: "",
-                        sharesContract: "",
+                        owner: tokenShares.owner,
+                        sharesContract: tokenShares.sharesContract,                        
                         market: Market.PRIMARY,
                         ...ar
-                    };                                        
-                    this.ethereumService.issueToken(ar, true).finally(async () => {
-                        let tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);                        
-                        const asset: Asset = {                         
-                            tokenId: tokenId, 
-                            issuer: issuerAddress.address,
-                            imageUrl: imageUrl,
-                            approved: false,
-                            owner: tokenShares.owner,
-                            sharesContract: tokenShares.sharesContract,                        
-                            market: Market.PRIMARY,
-                            ...ar
-                        };
-    
-                        this.logger.debug(`Asset ${ar.symbol} minted successfully`);
-                        asset.image = ""; // clear out the image                        
-                        await this.assetRepository.save(asset);                    
-                    });
+                    };
 
-                    asset.image = "";
-                    resolve(asset)
+                    this.logger.debug(`Asset ${ar.symbol} minted by transaction ${result}`);
+                    asset.image = ""; // clear out the image
+                    //transferTokenOwnership
+                    const dbAsset = await this.assetRepository.save(asset);                    
+                    resolve(dbAsset)
                 }
             } catch (error) {
                 reject(error);
