@@ -211,9 +211,9 @@ export class UserService {
                     throw Error("User with email address already exists");
                 }
 
-                let ngncAccountNumber = "";
+                let ngncAccountNumber = "0109998058";
                 if (uro.role !== Role.ADMIN) {
-                    ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, dbUser.email); //"9972122390";
+                    //ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
                 }
 
                 const user: User = {
