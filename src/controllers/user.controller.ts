@@ -22,8 +22,13 @@ export class UserController {
     }
 
     @Get(':id')
-    async getUser(@Param('id') id: number): Promise<Response> {
+    async getUser(@Param('id') id: number): Promise<Response> {        
         return ResponseUtils.getSuccessResponse(await this.userService.getUserById(id));
+    }
+
+    @Get('generate/passphrase')
+    async getPassphrase(): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(this.userService.getPassphrase());
     }
 
     @Post('new-user')

@@ -14,6 +14,7 @@ import { User } from './../models/user.model';
 import { EmailService } from './email.service';
 import { Address, EthereumService } from './ethereum.service';
 import { ProvidusBankService } from './providus-bank.service';
+import { generateMnemonic } from 'bip39';
 
 @Injectable()
 export class UserService {
@@ -194,6 +195,11 @@ export class UserService {
                 reject(error);
             }
         });
+    }
+
+    getPassphrase(): string {
+        const passphrase = generateMnemonic();    
+        return passphrase;
     }
 
     async getNewAddress(uro: UserRequest): Promise<User> {
