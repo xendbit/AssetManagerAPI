@@ -229,6 +229,10 @@ export class UserService {
                 }
 
                 dbUser = await this.userRepository.save(user);
+                const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
+                // TODO: give everyone 500K after registration. Remove this in production
+                // TODO: Remove this in production
+                this.ethereumService.fundWallet(address.address, 500000);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);
