@@ -7,4 +7,7 @@ import { UserBase } from "./user.base.model";
 export class User extends UserBase {
     @PrimaryGeneratedColumn()
     id?: number;    
+
+    @Column()
+    ngncAccountNumber: string;
 }

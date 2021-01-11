@@ -23,4 +23,24 @@ export abstract class UserBase {
     @IsNotEmpty()
     @Column()
     role: Role
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    bvn: string    
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    firstName: string    
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    middleName: string    
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    lastName: string    
 }

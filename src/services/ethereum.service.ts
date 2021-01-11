@@ -35,11 +35,11 @@ export class EthereumService {
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'xend-chain',
-                networkId: 1337,
-                chainId: 1337,
+                name: 'Binance Smart Chain',
+                networkId: 97,
+                chainId: 97,
             },
-            'istanbul',
+            'byzantium',
         );
     }
 
@@ -82,18 +82,18 @@ export class EthereumService {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
 
                 const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');           
+                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');           
                 var rawTransaction: TxData = {                    
                     gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasLimit: this.web3.utils.toHex('3000000'),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.postOrder(or).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
-                //const transaction = new Transaction(rawTransaction, { common: this.chain });
-                const transaction = new Transaction(rawTransaction, { chain:  3});
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
                 transaction.sign(poster.privateKey);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);
@@ -133,18 +133,18 @@ export class EthereumService {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: previousOwner.address });
 
                 const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
+                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasLimit: this.web3.utils.toHex('3000000'),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.transferTokenOwnership(tokenId, newOwner).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
-                //const transaction = new Transaction(rawTransaction, { common: this.chain });
-                const transaction = new Transaction(rawTransaction, { chain:  3});
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
                 transaction.sign(this.contractorPK);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);
@@ -169,21 +169,23 @@ export class EthereumService {
         return new Promise(async (resolve, reject) => {
             try {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
-                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                this.logger.debug(`Transaction Count: ${nonce}`);
 
                 const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
+                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');                
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasLimit: this.web3.utils.toHex('3000000'),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.mint(contractAssetRequest).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
-                //const transaction = new Transaction(rawTransaction, { common: this.chain });
-                const transaction = new Transaction(rawTransaction, { chain:  3});
+                this.logger.debug(rawTransaction);
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
                 transaction.sign(this.contractorPK);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);
@@ -243,18 +245,18 @@ export class EthereumService {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
 
                 const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
+                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasLimit: this.web3.utils.toHex('3000000'),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.fundWallet(recipient, amountHex).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
-                //const transaction = new Transaction(rawTransaction, { common: this.chain });
-                const transaction = new Transaction(rawTransaction, { chain:  3});
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
                 transaction.sign(this.contractorPK);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);

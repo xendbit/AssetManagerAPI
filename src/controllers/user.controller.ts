@@ -5,7 +5,6 @@ import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Response, ResponseUtils } from 'src/utils';
 import { UserRequest } from 'src/request.objects/user.request';
 import { LoginRequest } from 'src/request.objects/login.request';
-import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
 import { PasswordResetRequest } from 'src/request.objects/password.reset.request';
 
 @ApiTags('user')
@@ -41,11 +40,11 @@ export class UserController {
         return ResponseUtils.getSuccessResponse(await this.userService.login(lr));
     }
 
-    @Post('fund-wallet')
+    @Get('fund-wallet/:accountNumber/:amount')
     @Roles('admin')
     @ApiSecurity('api-key')
-    async fundWallet(@Body() fwr: FundWalletRequest): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.userService.fundWallet(fwr));
+    async fundWallet(@Param('accountNumber') accountNumber: string, @Param('amount') amount: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.fundWallet(accountNumber, amount));
     }
 
     @Get('wallet-balance/:userId')

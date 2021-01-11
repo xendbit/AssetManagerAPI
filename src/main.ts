@@ -23,7 +23,7 @@ async function bootstrap() {
       .setTitle('Asset Manager API') 
       .setDescription('API endpoints for Xend Assset Management and Order Matching Platform')
       .setVersion('1.0.0')
-      .addTag('asset-manager')
+      .addTag('asset-manager')      
       .addApiKey({
         type: 'apiKey', // this should be apiKey
         name: 'api-key', // this is the name of the key you expect in header

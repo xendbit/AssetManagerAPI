@@ -27,9 +27,9 @@ export class Order {
     price: number;
     @Column()
     status: OrderStatus;
-    @Column()
+    @Column({width: 20, type: 'bigint'})
     orderDate: number;
-    @Column()
+    @Column({width: 20, type: 'bigint'})
     statusDate: number;
     @Column()
     goodUntil: number;

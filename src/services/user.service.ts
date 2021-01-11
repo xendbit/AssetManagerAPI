@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES } from 'crypto-js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { Role } from 'src/models/enums';
 import { PasswordReset } from 'src/models/password.reset.model';
-import { FundWalletRequest } from 'src/request.objects/fund.wallet.request';
 import { LoginRequest } from 'src/request.objects/login.request';
 import { PasswordResetRequest } from 'src/request.objects/password.reset.request';
 import { UserRequest } from 'src/request.objects/user.request';
@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { User } from './../models/user.model';
 import { EmailService } from './email.service';
 import { Address, EthereumService } from './ethereum.service';
+import { ProvidusBankService } from './providus-bank.service';
 
 @Injectable()
 export class UserService {
@@ -24,7 +25,11 @@ export class UserService {
     @InjectRepository(PasswordReset)
     private passwordResetRepository: Repository<PasswordReset>
 
-    constructor(private ethereumService: EthereumService, private emailService: EmailService) {         
+    constructor(
+        private ethereumService: EthereumService,
+        private emailService: EmailService,
+        private providusService: ProvidusBankService,
+    ) {
     }
 
     async listUsers(options: IPaginationOptions): Promise<Pagination<User>> {
@@ -38,9 +43,9 @@ export class UserService {
             } catch (error) {
                 reject(error);
             }
-        });                
+        });
     }
-    
+
     async changePassword(pro: PasswordResetRequest): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -149,16 +154,18 @@ export class UserService {
         });
     }
 
-    async fundWallet(fwr: FundWalletRequest): Promise<string> {
+    async fundWallet(accountNumber: string, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const dbUser = await this.userRepository.findOne(fwr.userId);
+                const dbUser = await this.userRepository.createQueryBuilder("user")
+                    .where("ngncAccountNumber = :nan", { nan: accountNumber })
+                    .getOne()
                 if (dbUser === undefined) {
                     throw Error('User with ID not found');
                 }
 
                 const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
-                const result = await this.ethereumService.fundWallet(address.address, fwr.amount);
+                const result = await this.ethereumService.fundWallet(address.address, amount);
                 resolve(result);
             } catch (error) {
                 reject(error);
@@ -204,11 +211,21 @@ export class UserService {
                     throw Error("User with email address already exists");
                 }
 
+                let ngncAccountNumber = "";
+                if (uro.role !== Role.ADMIN) {
+                    ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, dbUser.email); //"9972122390";
+                }
+
                 const user: User = {
                     password: passwordHashed,
                     passphrase: passphraseHashed,
                     email: uro.email,
-                    role: uro.role
+                    role: uro.role,
+                    bvn: uro.bvn,
+                    ngncAccountNumber: ngncAccountNumber,
+                    firstName: uro.firstName,
+                    middleName: uro.middleName,
+                    lastName: uro.lastName
                 }
 
                 dbUser = await this.userRepository.save(user);
