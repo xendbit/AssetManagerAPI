@@ -99,6 +99,11 @@ export class AssetsService {
                     if (balance < needed) {
                         reject(`Wallet balance is too low for this transaction.`);
                     }
+                } else if (OrderType[or.orderType] === 'SELL') {
+                    const balance = await this.ethereumService.getOwnedShares(or.tokenId, posterAddress.address);
+                    if(balance < or.amount) {
+                        reject(`You don't have enough tokens for this transaction.`);
+                    }
                 }
 
                 await this.ethereumService.postOrder(or, poster);
@@ -188,7 +193,7 @@ export class AssetsService {
                         tokenId: tokenId, 
                         issuer: issuerAddress.address,
                         imageUrl: imageUrl,
-                        approved: false,
+                        approved: 0,
                         owner: tokenShares.owner,
                         sharesContract: tokenShares.sharesContract,                        
                         market: Market.PRIMARY,

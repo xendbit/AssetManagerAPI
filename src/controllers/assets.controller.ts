@@ -60,8 +60,8 @@ export class AssetsController {
     @Post('new-order')
     @Roles('admin')
     @ApiSecurity('api-key')
-    postNewOrder(@Body() or: OrderRequest): Promise<Order> {
-        return this.assetsService.postOrder(or);
+    async postNewOrder(@Body() or: OrderRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.assetsService.postOrder(or));
     }
 
     @Get('orders')

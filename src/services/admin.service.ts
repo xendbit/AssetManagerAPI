@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Asset } from 'src/models/asset.model';
 import { OrderStrategy, OrderType } from 'src/models/enums';
-import { User } from 'src/models/user.model';
+import { Order } from 'src/models/order.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { Repository } from 'typeorm';
 import { AssetsService } from './assets.service';
@@ -17,7 +17,7 @@ export class AdminService {
     constructor(private assetService: AssetsService) { }
 
     async changeApprovalStatus(tokenId: number, status: boolean): Promise<Boolean> {
-        this.logger.debug(`status is : ${status}`);
+        status = JSON.parse(status + "");
         return new Promise(async (resolve, reject) => {
             try {
                 let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
@@ -27,13 +27,14 @@ export class AdminService {
                 if (asset === undefined) {
                     reject(`Asset with token-id ${tokenId} not found`);
                 } else {
-                    this.logger.debug(asset);
-                    const numStatus = status;
+                    this.logger.debug(asset);                
+                    const numStatus = status ? 1 : 0;
                     if (asset.approved !== numStatus) {
                         asset.approved = numStatus;
                         asset = await this.assetRepository.save(asset);
 
-                        if (status === true) {
+                        if (status) {
+                            this.logger.debug('Putting Order Up for Sale');
                             // Issue Sell Order for shares available from issuer                            
                             const issuer: number = asset.issuerId;
                             const or: OrderRequest = {
@@ -46,7 +47,7 @@ export class AdminService {
                                 userId: issuer,
                             }
 
-                            this.assetService.postOrder(or);
+                            this.assetService.postOrder(or).then(_order => {}, _error => {});
                         }
                     }
 

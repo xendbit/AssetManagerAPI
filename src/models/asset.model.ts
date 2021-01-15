@@ -17,7 +17,7 @@ export class Asset extends AssetBaseClass {
     sharesContract: string;
 
     @Column({type: "tinyint", width: 1})
-    approved: boolean
+    approved: number
 
     @Column()
     imageUrl: string;
