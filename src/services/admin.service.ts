@@ -30,9 +30,7 @@ export class AdminService {
                     this.logger.debug(asset);                
                     const numStatus = status ? 1 : 0;
                     if (asset.approved !== numStatus) {
-                        asset.approved = numStatus;
-                        asset = await this.assetRepository.save(asset);
-
+                        asset.approved = numStatus;                        
                         if (status) {
                             this.logger.debug('Putting Order Up for Sale');
                             // Issue Sell Order for shares available from issuer                            
@@ -48,6 +46,7 @@ export class AdminService {
                             }
 
                             await this.assetService.postOrder(or);
+                            asset = await this.assetRepository.save(asset);
                         }
                     }
 
