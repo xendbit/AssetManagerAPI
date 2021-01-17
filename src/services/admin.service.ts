@@ -47,7 +47,7 @@ export class AdminService {
                                 userId: issuer,
                             }
 
-                            this.assetService.postOrder(or).then(_order => {}, _error => {});
+                            await this.assetService.postOrder(or);
                         }
                     }
 
