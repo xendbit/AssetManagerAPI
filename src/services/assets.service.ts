@@ -28,7 +28,7 @@ export class AssetsService {
 
     constructor(
         private ethereumService: EthereumService,
-        private imageService: ImageService,        
+        private imageService: ImageService,
     ) {
     }
 
@@ -101,7 +101,7 @@ export class AssetsService {
                     }
                 } else if (OrderType[or.orderType] === 'SELL') {
                     const balance = await this.ethereumService.getOwnedShares(or.tokenId, posterAddress.address);
-                    if(balance < or.amount) {
+                    if (balance < or.amount) {
                         reject(`You don't have enough tokens for this transaction.`);
                     }
                 }
@@ -109,6 +109,23 @@ export class AssetsService {
                 await this.ethereumService.postOrder(or, poster);
                 let order = await this.ethereumService.getOrder(key);
                 order = await this.orderRepository.save(order);
+
+                // check if the user has this asset, if not post it
+                let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+                    .where("owner = :owner", { owner: posterAddress.address })
+                    .andWhere("tokenId = :ti", { ti: or.tokenId })
+                    .getOne();
+
+                if (asset === undefined) {
+                    asset = (await this.assetRepository.createQueryBuilder("asset")
+                        .andWhere("tokenId = :ti", { ti: or.tokenId })
+                        .getMany())[0];
+
+                    const newAsset: Asset = { ...asset };
+                    newAsset.owner = posterAddress.address;
+                    await this.assetRepository.save(newAsset);
+                }
+
                 resolve(order);
             } catch (error) {
                 reject(error);
@@ -189,13 +206,13 @@ export class AssetsService {
                     const result = await this.ethereumService.issueToken(ar, true);
                     let tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
                     const imageUrl: string = await this.imageService.uploadAssetImage(ar.image);
-                    const asset: Asset = {                         
-                        tokenId: tokenId, 
+                    const asset: Asset = {
+                        tokenId: tokenId,
                         issuer: issuerAddress.address,
                         imageUrl: imageUrl,
                         approved: 0,
                         owner: tokenShares.owner,
-                        sharesContract: tokenShares.sharesContract,                        
+                        sharesContract: tokenShares.sharesContract,
                         market: Market.PRIMARY,
                         ...ar
                     };
@@ -203,7 +220,7 @@ export class AssetsService {
                     this.logger.debug(`Asset ${ar.symbol} minted by transaction ${result}`);
                     asset.image = ""; // clear out the image
                     //transferTokenOwnership
-                    const dbAsset = await this.assetRepository.save(asset);                    
+                    const dbAsset = await this.assetRepository.save(asset);
                     resolve(dbAsset)
                 }
             } catch (error) {
