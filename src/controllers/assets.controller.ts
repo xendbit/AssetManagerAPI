@@ -40,8 +40,8 @@ export class AssetsController {
     async listAssetByOwner(
         @Query('page') page: number,
         @Query('limit') limit: number,
-        @Param("issuerId") ownerId: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.listAssetsByIssuer({
+        @Param("ownerId") ownerId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.assetsService.listAssetsByOwner({
             page,
             limit,
             route: '/v3/assets',
