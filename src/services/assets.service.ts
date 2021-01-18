@@ -123,6 +123,7 @@ export class AssetsService {
 
                     const newAsset: Asset = { ...asset };
                     newAsset.owner = posterAddress.address;
+                    newAsset.id = undefined;
                     await this.assetRepository.save(newAsset);
                 }
 
@@ -179,7 +180,8 @@ export class AssetsService {
     }
 
     async listAssets(options: IPaginationOptions): Promise<Pagination<Asset>> {
-        return paginate<Asset>(this.assetRepository, options);
+        const qb = this.assetRepository.createQueryBuilder("asset").groupBy("tokenId");
+        return paginate<Asset>(qb, options);
     }
 
     async issueAsset(ar: AssetRequest): Promise<Asset> {
