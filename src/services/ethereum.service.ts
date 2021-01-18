@@ -32,12 +32,22 @@ export class EthereumService {
         this.web3 = new Web3(process.env.WEB3_URL);
         this.abi = JSON.parse(fs.readFileSync(path.resolve('src/etc/AssetManagerV2.json'), 'utf8')).abi;
         this.contractAddress = process.env.CONTRACT_ADDRESS;
+        // this.chain = Common.forCustomChain(
+        //     'mainnet',
+        //     {
+        //         name: 'Binance Smart Chain',
+        //         networkId: 97,
+        //         chainId: 97,
+        //     },
+        //     'byzantium',
+        // );
+
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'Binance Smart Chain',
-                networkId: 97,
-                chainId: 97,
+                name: 'Xend Stake Ledger',
+                networkId: 1337,
+                chainId: 1337,
             },
             'byzantium',
         );
