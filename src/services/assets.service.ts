@@ -39,7 +39,7 @@ export class AssetsService {
                 if (order === undefined) {
                     throw Error("Order with ID not found");
                 } else {
-                    let blockOrder = await this.ethereumService.getOrder(order.key);
+                    const blockOrder = await this.ethereumService.getOrder(order.key);
                     resolve(blockOrder);
                 }
             } catch (error) {
@@ -206,7 +206,7 @@ export class AssetsService {
                     ar.tokenId = tokenId;
                     ar.issuer = issuerAddress.address;
                     const result = await this.ethereumService.issueToken(ar, true);
-                    let tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
+                    const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
                     const imageUrl: string = await this.imageService.uploadAssetImage(ar.image);
                     const asset: Asset = {
                         tokenId: tokenId,

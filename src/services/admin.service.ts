@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Asset } from 'src/models/asset.model';
 import { OrderStrategy, OrderType } from 'src/models/enums';
-import { Order } from 'src/models/order.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { Repository } from 'typeorm';
 import { AssetsService } from './assets.service';
@@ -16,7 +15,7 @@ export class AdminService {
 
     constructor(private assetService: AssetsService) { }
 
-    async changeApprovalStatus(tokenId: number, status: boolean): Promise<Boolean> {
+    async changeApprovalStatus(tokenId: number, status: boolean): Promise<boolean> {
         status = JSON.parse(status + "");
         return new Promise(async (resolve, reject) => {
             try {

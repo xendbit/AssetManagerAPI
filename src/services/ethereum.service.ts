@@ -12,7 +12,9 @@ import { User } from 'src/models/user.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { AssetRequest } from 'src/request.objects/asset-request';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs')
 
 @Injectable()
@@ -32,25 +34,25 @@ export class EthereumService {
         this.web3 = new Web3(process.env.WEB3_URL);
         this.abi = JSON.parse(fs.readFileSync(path.resolve('src/etc/AssetManagerV2.json'), 'utf8')).abi;
         this.contractAddress = process.env.CONTRACT_ADDRESS;
-        // this.chain = Common.forCustomChain(
-        //     'mainnet',
-        //     {
-        //         name: 'Binance Smart Chain',
-        //         networkId: 97,
-        //         chainId: 97,
-        //     },
-        //     'byzantium',
-        // );
-
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'Xend Stake Ledger',
-                networkId: 1337,
-                chainId: 1337,
+                name: 'Binance Smart Chain',
+                networkId: 97,
+                chainId: 97,
             },
             'byzantium',
         );
+
+        // this.chain = Common.forCustomChain(
+        //     'mainnet',
+        //     {
+        //         name: 'xend-chain',
+        //         networkId: 1337,
+        //         chainId: 1337,
+        //     },
+        //     'istanbul',
+        // );
     }
 
     getOrder(key: string): Promise<Order> {
@@ -82,7 +84,7 @@ export class EthereumService {
         });
     }
 
-    postOrder(orderRequest: OrderRequest, user: User): Promise<String> {
+    postOrder(orderRequest: OrderRequest, user: User): Promise<string> {
         const or: OrderRequest = {...orderRequest};
         or.goodUntil = new Date(or.goodUntil).getTime() / 1000;
         return new Promise(async (resolve, reject) => {
@@ -90,12 +92,10 @@ export class EthereumService {
                 const poster = this.getAddressFromEncryptedPK(user.passphrase);
                 const nonce: number = await this.web3.eth.getTransactionCount(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
-
-                const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');           
-                var rawTransaction: TxData = {                    
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex('3000000'),
+            
+                const rawTransaction: TxData = {                    
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.postOrder(or).encodeABI(),
@@ -118,7 +118,7 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const res = await contract.methods.tokenShares(tokenId).call();
-                let tokenShares: TokenShares = {
+                const tokenShares: TokenShares = {
                     description: res.description,
                     issuer: res.issuer,
                     issuingPrice: res.issuingPrice,
@@ -142,11 +142,9 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: previousOwner.address });
 
-                const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
-                var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex('3000000'),
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.transferTokenOwnership(tokenId, newOwner).encodeABI(),
@@ -181,12 +179,10 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
                 this.logger.debug(`Transaction Count: ${nonce}`);
 
-                const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');                
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
-                var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex('3000000'),
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.mint(contractAssetRequest).encodeABI(),
@@ -213,7 +209,7 @@ export class EthereumService {
     getAddress(passphrase: string): Address {
         const seed: Buffer = mnemonicToSeedSync(passphrase);
         const root: EthereumHDKey = hdkey.fromMasterSeed(seed);
-        var path = "m/44'/60'/0'/0/0";
+        const path = "m/44'/60'/0'/0/0";
         const addrNode: EthereumHDKey = root.derivePath(path);
         const pk: Buffer = addrNode.getWallet().getPrivateKey();
         this.logger.debug(addrNode.getWallet().getAddressString());
@@ -254,11 +250,9 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
 
-                const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = '22000000000';//Math.round(block.gasUsed / block.transactions.length).toLocaleString().split(',').join('');
-                var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex('3000000'),
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
                     data: contract.methods.fundWallet(recipient, amountHex).encodeABI(),

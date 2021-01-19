@@ -3,10 +3,8 @@ import { Market, OrderStatus, OrderStrategy, OrderType, Role } from "src/models/
 
 @Injectable()
 export class ConfigService {
-    constructor() { }
-
     getEnums(): Promise<EnumClass[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             const orderTypes: EnumClass[] =
             [
                 {
