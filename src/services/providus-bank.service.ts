@@ -9,12 +9,13 @@ export class ProvidusBankService {
     httpService: HttpClient;
 
     constructor() {
-        this.httpService = new HttpClient('MoneyWave API');
+        this.httpService = new HttpClient('Providus API');
     }
+
 
     async createBankAccount(bvn: string, firstName: string, lastName: string, middleName: string, email: string): Promise<string> {
         try {
-            const url = process.env.PROVIDUS_URL;
+            const url = process.env.PROVIDUS_URL + "/providus/new-account";
             const authHeader = "Api-Key " + process.env.PROVIDUS_KEY;
 
             const headers: IHeaders = {
@@ -22,13 +23,15 @@ export class ProvidusBankService {
                 "Accept": "application/json",
                 "Authorization": authHeader
             };
-         
+
             const fields = {
-                "first_name": firstName,
-                "last_name": lastName,
-                "middle_name": middleName,
+                "firstName": firstName,
+                "lastName": lastName,
+                "middleName": middleName,
                 "bvn": bvn,
-                "email": email
+                "email": email,
+                "fundingUrl": process.env.NGNC_FUNDING_URL,
+                "apiKey": process.env.ENCRYPTED,
             };
 
             const postData = JSON.stringify(fields);
@@ -36,24 +39,21 @@ export class ProvidusBankService {
             this.logger.debug("URL: " + url);
 
             const res = await this.httpService.post(url, postData, headers);
-            if (res.message.statusCode === 200) {
+            if (res.message.statusCode === 201) {
                 const body = await res.readBody();
-                const parsed = JSON.parse(body)[0];
-                if (parsed.responseMessage !== undefined) {
-                    throw Error("Can not get NGNC Account Number: " + parsed.responseMessage);
+                const parsed = JSON.parse(body);
+                if (parsed.accountNumber !== undefined) {
+                    return parsed.accountNumber;
                 } else {
-                    if (parsed.isSuccessful === true) {
-                        return parsed.Message.AccountNumber;
-                    } else {
-                        throw Error("Can not get NGNC Account Number: " + body);
-                    }
+                    throw Error(JSON.stringify(parsed));
                 }
             } else {
                 const body = await res.readBody();
-                throw Error("Can not get NGNC Account Number: " + body);
+                throw Error(JSON.parse(body).error);
             }
         } catch (error) {
             throw error;
         }
     }
+
 }

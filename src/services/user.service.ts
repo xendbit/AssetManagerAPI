@@ -15,6 +15,7 @@ import { EmailService } from './email.service';
 import { Address, EthereumService } from './ethereum.service';
 import { ProvidusBankService } from './providus-bank.service';
 import { generateMnemonic } from 'bip39';
+import { ImageService } from './image.service';
 
 @Injectable()
 export class UserService {
@@ -30,6 +31,7 @@ export class UserService {
         private ethereumService: EthereumService,
         private emailService: EmailService,
         private providusService: ProvidusBankService,
+        private imageService: ImageService,
     ) {
     }
 
@@ -177,8 +179,7 @@ export class UserService {
     async login(uro: LoginRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-                const salt = genSaltSync(12, 'a');
-                let dbUser: User = await this.userRepository.createQueryBuilder("user")
+                const dbUser: User = await this.userRepository.createQueryBuilder("user")
                     .where("email = :email", { "email": uro.email })
                     .getOne();
 
@@ -217,9 +218,15 @@ export class UserService {
                     throw Error("User with email address already exists");
                 }
 
-                let ngncAccountNumber = "0109998058";
+                let ngncAccountNumber = "";
                 if (uro.role !== Role.ADMIN) {
-                    //ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
+                    ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
+                }
+
+                let imageUrl = '';
+                if(uro.image === undefined || uro.image === '') {
+                } else {
+                    imageUrl = await this.imageService.uploadAssetImage(uro.image);
                 }
 
                 const user: User = {
@@ -231,7 +238,8 @@ export class UserService {
                     ngncAccountNumber: ngncAccountNumber,
                     firstName: uro.firstName,
                     middleName: uro.middleName,
-                    lastName: uro.lastName
+                    lastName: uro.lastName,     
+                    imageUrl: imageUrl,               
                 }
 
                 dbUser = await this.userRepository.save(user);

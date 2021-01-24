@@ -10,4 +10,7 @@ export class User extends UserBase {
 
     @Column()
     ngncAccountNumber: string;
+
+    @Column({width: 500})
+    imageUrl: string
 }

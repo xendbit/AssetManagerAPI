@@ -37,9 +37,9 @@ export class EthereumService {
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'Binance Smart Chain',
-                networkId: 97,
-                chainId: 97,
+                name: 'xDAI Chain',
+                networkId: 100,
+                chainId: 100,
             },
             'byzantium',
         );
@@ -86,10 +86,10 @@ export class EthereumService {
 
     postOrder(orderRequest: OrderRequest, user: User): Promise<string> {
         const or: OrderRequest = {...orderRequest};
-        or.goodUntil = new Date(or.goodUntil).getTime() / 1000;
+        or.goodUntil = new Date(or.goodUntil).getTime() / 1000;        
         return new Promise(async (resolve, reject) => {
             try {
-                const poster = this.getAddressFromEncryptedPK(user.passphrase);
+                const poster = this.getAddressFromEncryptedPK(user.passphrase);                
                 const nonce: number = await this.web3.eth.getTransactionCount(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
             
@@ -212,7 +212,7 @@ export class EthereumService {
         const path = "m/44'/60'/0'/0/0";
         const addrNode: EthereumHDKey = root.derivePath(path);
         const pk: Buffer = addrNode.getWallet().getPrivateKey();
-        this.logger.debug(addrNode.getWallet().getAddressString());
+        this.logger.debug(addrNode.getWallet().getAddressString());        
         return {
             address: addrNode.getWallet().getAddressString(),
             privateKey: pk
@@ -259,17 +259,51 @@ export class EthereumService {
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
+                this.logger.debug(rawTransaction);
                 const transaction = new Transaction(rawTransaction, { common: this.chain });
-                //const transaction = new Transaction(rawTransaction, { chain:  3});
                 transaction.sign(this.contractorPK);
-                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
-                resolve(reciept.transactionHash);
+                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
+                    this.logger.debug(`Account funding succcessul`);
+                    // Give the user some xDAI if they don't already have it.
+                    this._giveGas(recipient);
+                })
+                resolve("Success");
             } catch (error) {
                 reject(error);
             }
         });
     }
+
+    private async _giveGas(address: string) {
+        this.logger.debug("checking if user require gas");
+        const availableGas: number = +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
+        this.logger.debug(`availableGas: ${availableGas}`);
+        if(availableGas < +process.env.DAI_LOW_GAS_LIMIT) {
+            // gas depleted, give some gas
+            this.logger.debug(`Gas Depleted, Giving ${address} some gas`);
+            const xendPK = this.contractorPK;
+            const xendAddress = this.contractor;
+
+            const nonce: number = await this.web3.eth.getTransactionCount(xendAddress);
+
+            var rawTransaction: TxData = {
+                gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+            to: address,
+                value: this.web3.utils.toHex(this.web3.utils.toWei(process.env.DAI_LOW_GAS_LIMIT, "ether")),
+                nonce: this.web3.utils.toHex(nonce)
+            }
+         
+            const transaction = new Transaction(rawTransaction, {common: this.chain});       
+            transaction.sign(xendPK);
+            this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
+                this.logger.debug(`Gas funding for ${address} successful`);
+            }); 
+        } 
+    }    
 }
+
+
 
 export class Address {
     address: string;

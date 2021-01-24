@@ -42,5 +42,8 @@ export abstract class UserBase {
     @ApiProperty()
     @IsNotEmpty()
     @Column()
-    lastName: string    
+    lastName: string   
+    
+    @ApiProperty()
+    image?: string
 }
