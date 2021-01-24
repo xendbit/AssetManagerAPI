@@ -34,6 +34,8 @@ export class ProvidusBankService {
                 "apiKey": process.env.ENCRYPTED,
             };
 
+            this.logger.debug(fields);
+            
             const postData = JSON.stringify(fields);
 
             this.logger.debug("URL: " + url);
