@@ -75,4 +75,9 @@ export class UserController {
     async changePassword(@Body() pro: PasswordResetRequest): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.changePassword(pro));
     }    
+
+    @Get('confirm-email/:tag')
+    async confirmEmail(@Param('tag') tag: string): Promise<string> {
+        return await this.userService.confirmEmail(tag);
+    }
 }

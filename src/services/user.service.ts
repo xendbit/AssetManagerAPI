@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
-import { AES } from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Role } from 'src/models/enums';
 import { PasswordReset } from 'src/models/password.reset.model';
@@ -199,8 +199,29 @@ export class UserService {
     }
 
     getPassphrase(): string {
-        const passphrase = generateMnemonic();    
+        const passphrase = generateMnemonic();
         return passphrase;
+    }
+
+    async confirmEmail(tag: string): Promise<string> {
+        const email = AES.decrypt(Buffer.from(tag, 'base64').toString('ascii'), process.env.KEY).toString(enc.Utf8)
+
+        let dbUser: User = await this.userRepository.createQueryBuilder("user")
+            .where("email = :email", { "email": email })
+            .getOne();
+
+        if (dbUser !== undefined) {
+            throw Error("User with email address already exists");
+        }
+
+
+        if (dbUser !== undefined) {
+            dbUser.activated = true;
+            this.userRepository.save(dbUser).then(() => { });
+            return "Email confirmation successful. You can now login on the app";
+        }
+
+        return "Can not find confirmation link.";
     }
 
     async getNewAddress(uro: UserRequest): Promise<User> {
@@ -224,7 +245,7 @@ export class UserService {
                 }
 
                 let imageUrl = '';
-                if(uro.image === undefined || uro.image === '') {
+                if (uro.image === undefined || uro.image === '') {
                 } else {
                     imageUrl = await this.imageService.uploadAssetImage(uro.image);
                 }
@@ -238,9 +259,9 @@ export class UserService {
                     ngncAccountNumber: ngncAccountNumber,
                     firstName: uro.firstName,
                     middleName: uro.middleName,
-                    lastName: uro.lastName,     
-                    imageUrl: imageUrl,       
-                    activated: false,        
+                    lastName: uro.lastName,
+                    imageUrl: imageUrl,
+                    activated: false,
                 }
 
                 dbUser = await this.userRepository.save(user);
