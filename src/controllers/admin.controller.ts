@@ -15,4 +15,11 @@ export class AdminController {
     async changeApprovalStatus(@Param("tokenId") tokenId: number, @Param("status") status: boolean): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.adminService.changeApprovalStatus(tokenId, status));
     }    
+
+    @Post('change-asset-market/:tokenId/:market')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async changeAssetMarket(@Param("tokenId") tokenId: number, @Param("market") market: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.adminService.changeAssetMarket(tokenId, market));
+    }        
 }
