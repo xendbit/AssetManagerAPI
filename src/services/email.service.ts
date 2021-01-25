@@ -1,6 +1,8 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
+import { AES } from 'crypto-js';
 import { readFileSync } from 'fs';
+import { User } from 'src/models/user.model';
 
 @Injectable()
 export class EmailService {
@@ -14,6 +16,18 @@ export class EmailService {
         const subjectLine = "Password Reset Token";
         await this.sendEmail(to, subjectLine, content, [])
     }
+
+    async sendConfirmationEmail(dbUser: User) {
+        let content = readFileSync('src/etc/confirmation_email.html', 'utf8');
+        const link =  process.env.EMAIL_CONFIRMATION_URL + "/" + Buffer.from(AES.encrypt(dbUser.email, process.env.KEY).toString()).toString('base64');
+        const name = `${dbUser.firstName} ${dbUser.middleName} ${dbUser.lastName}`;
+        content = content.replace("#link", link).replace("#name", name).replace('#link', link);
+        this.logger.debug(content);
+
+        const subjectLine = "Congratulations: Welcome to NSE Art Exchange";
+        await this.sendEmail(dbUser.email, subjectLine, content, [])
+    }
+
 
     async sendEmail(to: string, subject: string, content: string, cc: string[]) {
         await this.mailerService.sendMail({

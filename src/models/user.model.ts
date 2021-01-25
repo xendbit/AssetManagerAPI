@@ -13,4 +13,7 @@ export class User extends UserBase {
 
     @Column({width: 500})
     imageUrl: string
+
+    @Column({type: 'tinyint', width: 1})
+    activated: boolean;
 }
