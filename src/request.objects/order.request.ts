@@ -39,4 +39,12 @@ export class OrderRequest {
     userId: number;
     
     key?: string;
+
+    @ApiProperty()
+    orderId?: number;
+
+    @ApiProperty()
+    @IsNumber()
+    @IsNotEmpty()
+    market: number;
 }

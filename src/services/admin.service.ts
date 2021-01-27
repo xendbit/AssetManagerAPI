@@ -62,6 +62,7 @@ export class AdminService {
                                 price: asset.issuingPrice,
                                 tokenId: tokenId,
                                 userId: issuer,
+                                market: Market.PRIMARY
                             }
 
                             await this.assetService.postOrder(or);

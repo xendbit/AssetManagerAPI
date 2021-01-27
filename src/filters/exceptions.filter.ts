@@ -9,7 +9,8 @@ export class ExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    this.logger.error("Error: ", exception);
+    this.logger.error("Error: ");
+    this.logger.error(exception);
     let message = exception;
     if (exception.message) {
       message = exception.message;
@@ -18,8 +19,10 @@ export class ExceptionsFilter implements ExceptionFilter {
       message = exception.response.message;
     }
 
-    if (message.indexOf("not found") >= 0) {
-      status = HttpStatus.NOT_FOUND;
+    if (message.indexOf !== undefined) {
+      if (message.indexOf("not found") >= 0) {
+        status = HttpStatus.NOT_FOUND;
+      }
     }
 
     response.status(status).json({

@@ -37,9 +37,9 @@ export class EthereumService {
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'xDAI Chain',
-                networkId: 100,
-                chainId: 100,
+                name: 'Binance Teste Chain',
+                networkId: 97,
+                chainId: 97,
             },
             'byzantium',
         );
@@ -66,14 +66,12 @@ export class EthereumService {
                     buyer: blOrder.buyer,
                     goodUntil: blOrder.goodUntil * 1000,
                     key: key,
-                    orderDate: blOrder.orderDate * 1000,
                     orderStrategy: blOrder.orderStrategy,
                     orderType: blOrder.orderType,
                     originalAmount: blOrder.originalAmount,
                     price: blOrder.price,
                     seller: blOrder.seller,
                     status: blOrder.status,
-                    statusDate: blOrder.statusDate * 1000,
                     tokenId: blOrder.tokenId,
                 };
 
@@ -84,9 +82,8 @@ export class EthereumService {
         });
     }
 
-    postOrder(orderRequest: OrderRequest, user: User): Promise<string> {
-        const or: OrderRequest = {...orderRequest};
-        or.goodUntil = new Date(or.goodUntil).getTime() / 1000;        
+    postOrder(or: OrderRequest, user: User): Promise<string> {
+        const goodUntil = new Date(or.goodUntil).getTime() / 1000;        
         return new Promise(async (resolve, reject) => {
             try {
                 const poster = this.getAddressFromEncryptedPK(user.passphrase);                
@@ -98,7 +95,16 @@ export class EthereumService {
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
-                    data: contract.methods.postOrder(or).encodeABI(),
+                    data: contract.methods.postOrder(
+                        or.orderType,
+                        or.orderStrategy,
+                        or.amount,
+                        or.price,
+                        or.tokenId,
+                        or.goodUntil,
+                        or.key,
+                        or.market
+                    ).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
@@ -163,17 +169,8 @@ export class EthereumService {
     }
 
     // minting
-    issueToken(ar: AssetRequest, transferOwnershipToIssuer: boolean): Promise<string> {        
-        const contractAssetRequest = {
-            tokenId: ar.tokenId,
-            description: ar.description,
-            symbol: ar.symbol,
-            totalSupply: ar.totalSupply,
-            issuingPrice: ar.issuingPrice,
-            issuer: ar.issuer
-        }
-
-        this.logger.debug(contractAssetRequest);
+    issueToken(ar: AssetRequest, transferOwnershipToIssuer: boolean): Promise<string> {       
+        this.logger.debug(ar);
         return new Promise(async (resolve, reject) => {
             try {
                 const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
@@ -185,7 +182,13 @@ export class EthereumService {
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
-                    data: contract.methods.mint(contractAssetRequest).encodeABI(),
+                    data: contract.methods.mint(
+                        ar.tokenId,
+                        ar.symbol,
+                        ar.totalSupply,
+                        ar.issuingPrice,
+                        ar.issuer                        
+                    ).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
