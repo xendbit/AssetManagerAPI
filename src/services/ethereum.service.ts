@@ -169,7 +169,7 @@ export class EthereumService {
     }
 
     // minting
-    issueToken(ar: AssetRequest, transferOwnershipToIssuer: boolean): Promise<string> {       
+    issueToken(ar: AssetRequest): Promise<string> {       
         this.logger.debug(ar);
         return new Promise(async (resolve, reject) => {
             try {
@@ -187,7 +187,8 @@ export class EthereumService {
                         ar.symbol,
                         ar.totalSupply,
                         ar.issuingPrice,
-                        ar.issuer                        
+                        ar.issuer,
+                        ar.image
                     ).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
