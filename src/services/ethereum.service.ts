@@ -125,7 +125,6 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const res = await contract.methods.tokenShares(tokenId).call();
-                this.logger.debug(res);
                 const tokenShares: TokenShares = {
                     description: res["3"],
                     issuer: res["7"],

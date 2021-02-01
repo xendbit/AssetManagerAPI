@@ -205,11 +205,10 @@ export class AssetsService {
                     const tokenId = Utils.getRndInteger(1, process.env.MAX_TOKEN_ID);
                     ar.tokenId = tokenId;
                     ar.issuer = issuerAddress.address;
-                    //const imageUrl: string = await this.imageService.uploadAssetImage(ar.image);
-                    //ar.image = imageUrl;
+                    const imageUrl: string = await this.imageService.uploadAssetImage(ar.image);
+                    ar.image = imageUrl;
                     const result = await this.ethereumService.issueToken(ar );
                     const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);                    
-                    this.logger.debug(tokenShares);
                     const asset: Asset = {
                         tokenId: tokenId,
                         issuer: issuerAddress.address,
