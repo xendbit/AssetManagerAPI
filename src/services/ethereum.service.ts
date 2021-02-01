@@ -37,9 +37,9 @@ export class EthereumService {
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'Binance Teste Chain',
-                networkId: 97,
-                chainId: 97,
+                name: 'POA.Network',
+                networkId: 99,
+                chainId: 99,
             },
             'byzantium',
         );
