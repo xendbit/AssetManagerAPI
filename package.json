@@ -43,6 +43,7 @@
     "class-validator": "^0.12.2",
     "cloudinary": "^1.23.0",
     "crypto-js": "^4.0.0",
+    "dotenv": "^8.2.0",
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-vm": "^4.2.0",
     "ethereumjs-wallet": "^1.0.1",

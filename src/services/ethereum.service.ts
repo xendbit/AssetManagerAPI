@@ -11,6 +11,7 @@ import { Order } from 'src/models/order.model';
 import { User } from 'src/models/user.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { AssetRequest } from 'src/request.objects/asset-request';
+import { NonceManager } from './nonce-manager.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path')
@@ -37,9 +38,9 @@ export class EthereumService {
         this.chain = Common.forCustomChain(
             'mainnet',
             {
-                name: 'POA.Network',
-                networkId: 99,
-                chainId: 99,
+                name: 'POA.Network (Sokol)',
+                networkId: 77,
+                chainId: 77,
             },
             'byzantium',
         );
@@ -87,7 +88,7 @@ export class EthereumService {
         return new Promise(async (resolve, reject) => {
             try {
                 const poster = this.getAddressFromEncryptedPK(user.passphrase);                
-                const nonce: number = await this.web3.eth.getTransactionCount(poster.address);
+                const nonce: number = await NonceManager.getNonce(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
             
                 const rawTransaction: TxData = {                    
@@ -124,15 +125,16 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const res = await contract.methods.tokenShares(tokenId).call();
+                this.logger.debug(res);
                 const tokenShares: TokenShares = {
-                    description: res.description,
-                    issuer: res.issuer,
-                    issuingPrice: res.issuingPrice,
-                    owner: res.owner,
-                    sharesContract: res.sharesContract,
-                    symbol: res.symbol,
-                    tokenId: res.tokenId,
-                    totalSupply: res.totalSupply,
+                    description: res["3"],
+                    issuer: res["7"],
+                    issuingPrice: res["6"],
+                    owner: res["1"],
+                    sharesContract: res["2"],
+                    symbol: res["4"],
+                    tokenId: res["0"],
+                    totalSupply: res["5"],
                     approved: 0
                 }
                 resolve(tokenShares);
@@ -144,8 +146,8 @@ export class EthereumService {
 
     async transferTokenOwnership(tokenId: number, newOwner: string | number, previousOwner: Address): Promise<string> {
         return new Promise(async (resolve, reject) => {
-            try {
-                const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
+            try {                
+                const nonce: number = await NonceManager.getNonce(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: previousOwner.address });
 
                 const rawTransaction: TxData = {
@@ -173,7 +175,7 @@ export class EthereumService {
         this.logger.debug(ar);
         return new Promise(async (resolve, reject) => {
             try {
-                const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
+                const nonce: number = await NonceManager.getNonce(this.contractor);
                 this.logger.debug(`Transaction Count: ${nonce}`);
 
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
@@ -251,7 +253,7 @@ export class EthereumService {
         return new Promise(async (resolve, reject) => {
             try {
                 const amountHex = this.web3.utils.toHex(amount);
-                const nonce: number = await this.web3.eth.getTransactionCount(this.contractor);
+                const nonce: number = await NonceManager.getNonce(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
 
                 const rawTransaction: TxData = {
@@ -288,7 +290,7 @@ export class EthereumService {
             const xendPK = this.contractorPK;
             const xendAddress = this.contractor;
 
-            const nonce: number = await this.web3.eth.getTransactionCount(xendAddress);
+            const nonce: number = await NonceManager.getNonce(xendAddress);
 
             var rawTransaction: TxData = {
                 gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),

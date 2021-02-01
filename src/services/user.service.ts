@@ -240,7 +240,7 @@ export class UserService {
                 }
 
                 let ngncAccountNumber = "0000000000";
-                if (uro.role !== Role.ADMIN || uro.bvn !== "00000000000") {
+                if (uro.role !== Role.ADMIN && uro.bvn !== "11111111111") {
                     ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
                 }
 
