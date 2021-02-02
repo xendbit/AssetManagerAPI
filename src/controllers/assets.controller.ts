@@ -6,11 +6,15 @@ import { Order } from 'src/models/order.model';
 import { Response, ResponseUtils } from 'src/utils';
 import { AssetRequest } from 'src/request.objects/asset-request';
 import { OrderRequest } from 'src/request.objects/order.request';
+import { OrdersService } from 'src/services/orders.service';
 
 @Controller('/assets')
 @ApiTags('asset-manager')
 export class AssetsController {
-    constructor(private readonly assetsService: AssetsService) { }
+    constructor(
+        private assetsService: AssetsService,
+        private ordersService: OrdersService,
+    ) { }
 
     @Post('issue-asset')
     @Roles('admin')
@@ -61,12 +65,12 @@ export class AssetsController {
     @Roles('admin')
     @ApiSecurity('api-key')
     async postNewOrder(@Body() or: OrderRequest): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.postOrder(or));
+        return ResponseUtils.getSuccessResponse(await this.ordersService.postOrder(or, false));
     }
 
     @Get('orders')
     async listOrders(@Query('page') page: number, @Query('limit') limit: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.listOrders({
+        return ResponseUtils.getSuccessResponse(await this.ordersService.listOrders({
             page,
             limit,
             route: '/v3/assets',
@@ -75,7 +79,7 @@ export class AssetsController {
 
     @Get('orders/by-buyer/:buyerId')
     async listOrdersByBuyerId(@Query('page') page: number, @Query('limit') limit: number, @Param("buyerId") buyerId: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.listOrdersByBuyer({
+        return ResponseUtils.getSuccessResponse(await this.ordersService.listOrdersByBuyer({
             page,
             limit,
             route: '/v3/assets',
@@ -84,7 +88,7 @@ export class AssetsController {
 
     @Get('orders/by-seller/:sellerId')
     async listOrdersBySellerId(@Query('page') page: number, @Query('limit') limit: number, @Param("sellerId") sellerId: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.listOrdersBySeller({
+        return ResponseUtils.getSuccessResponse(await this.ordersService.listOrdersBySeller({
             page,
             limit,
             route: '/v3/assets',
@@ -93,7 +97,7 @@ export class AssetsController {
 
     @Get('orders/by-token-id/:tokenId')
     async listOrdersByTokenId(@Query('page') page: number, @Query('limit') limit: number, @Param("tokenId") tokenId: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.listOrdersByTokenId({
+        return ResponseUtils.getSuccessResponse(await this.ordersService.listOrdersByTokenId({
             page,
             limit,
             route: '/v3/assets',
@@ -102,7 +106,7 @@ export class AssetsController {
 
     @Get('orders/:id')
     async findOrderByKey(@Param("id") id: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.assetsService.findOrderById(id));
+        return ResponseUtils.getSuccessResponse(await this.ordersService.findOrderById(id));
     }
 
 }

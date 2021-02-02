@@ -12,15 +12,12 @@ import { OrderRequest } from 'src/request.objects/order.request';
 import { AssetRequest } from 'src/request.objects/asset-request';
 import { Asset } from 'src/models/asset.model';
 import { ImageService } from './image.service';
-import { AdminService } from './admin.service';
+import { OrdersService } from './orders.service';
 
 @Injectable()
 export class AssetsService {
     @InjectRepository(User)
     private userRepository: Repository<User>
-
-    @InjectRepository(Order)
-    private orderRepository: Repository<Order>
 
     @InjectRepository(Asset)
     private assetRepository: Repository<Asset>
@@ -30,111 +27,8 @@ export class AssetsService {
     constructor(
         private ethereumService: EthereumService,
         private imageService: ImageService,
+        private ordersService: OrdersService
     ) {
-    }
-
-    async findOrderById(id: number): Promise<Order> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const order: Order = await this.orderRepository.findOne(id);
-                if (order === undefined) {
-                    throw Error("Order with ID not found");
-                } else {
-                    const blockOrder = await this.ethereumService.getOrder(order.key);
-                    blockOrder.id = order.id;
-                    this.orderRepository.save(blockOrder);
-                    resolve(blockOrder);
-                }
-            } catch (error) {
-                reject(error);
-            }
-        })
-    }
-
-    async listOrders(options: IPaginationOptions): Promise<Pagination<Order>> {
-        return paginate<Order>(this.orderRepository, options);
-    }
-
-    async listOrdersByTokenId(options: IPaginationOptions, tokenId: number): Promise<Pagination<Order>> {
-        const qb = this.orderRepository.createQueryBuilder("order").where("tokenId = :tokenId", { tokenId: tokenId });
-        return paginate<Order>(qb, options);
-    }
-
-    async listOrdersByBuyer(options: IPaginationOptions, buyerId: number): Promise<Pagination<Order>> {
-        const buyer: User = await this.userRepository.findOne(buyerId);
-        if (buyer === undefined) {
-            throw Error("Buyer not found");
-        }
-
-        const buyerAddress = await this.ethereumService.getAddressFromEncryptedPK(buyer.passphrase);
-        const qb = this.orderRepository.createQueryBuilder("order")
-            .where("buyer = :buyer", { buyer: buyerAddress.address });
-        return paginate<Order>(qb, options);
-    }
-
-    async listOrdersBySeller(options: IPaginationOptions, sellerId: number): Promise<Pagination<Order>> {
-        const seller: User = await this.userRepository.findOne(sellerId);
-        if (seller === undefined) {
-            throw Error("Seller not found");
-        }
-
-        const sellerAddress = await this.ethereumService.getAddressFromEncryptedPK(seller.passphrase);
-        const qb = this.orderRepository.createQueryBuilder("order")
-            .where("seller = :seller", { seller: sellerAddress.address });
-        return paginate<Order>(qb, options);
-    }
-
-    async postOrder(or: OrderRequest): Promise<Order> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const key = Utils.getKey(or);
-                or.key = key;
-                const poster = await this.userRepository.findOne(or.userId);
-                if (poster === undefined) {
-                    reject(`User with id: ${or.userId} not found`);
-                }
-
-                const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
-                this.logger.debug(OrderType[or.orderType]);
-                if (OrderType[or.orderType] === 'BUY') {
-                    const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
-                    const needed = or.amount * or.price;
-                    if (balance < needed) {
-                        reject(`Wallet balance is too low for this transaction.`);
-                    }
-                } else if (OrderType[or.orderType] === 'SELL') {
-                    const balance = await this.ethereumService.getOwnedShares(or.tokenId, posterAddress.address);
-                    if (balance < or.amount) {
-                        reject(`You don't have enough tokens for this transaction.`);
-                    }
-                }
-
-                await this.ethereumService.postOrder(or, poster);
-                let order = await this.ethereumService.getOrder(key);
-                order = await this.orderRepository.save(order);
-
-                // check if the user has this asset, if not post it
-                let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
-                    .where("owner = :owner", { owner: posterAddress.address })
-                    .andWhere("tokenId = :ti", { ti: or.tokenId })
-                    .getOne();
-
-                if (asset === undefined) {
-                    asset = (await this.assetRepository.createQueryBuilder("asset")
-                        .andWhere("tokenId = :ti", { ti: or.tokenId })
-                        .getMany())[0];
-
-                    const newAsset: Asset = { ...asset };
-                    newAsset.owner = posterAddress.address;
-                    newAsset.id = undefined;
-                    await this.assetRepository.save(newAsset);
-                }
-
-                resolve(order);
-            } catch (error) {
-                reject(error);
-            }
-        });
     }
 
     async findAssetByTokenId(tokenId: number): Promise<Asset> {
@@ -210,9 +104,9 @@ export class AssetsService {
                     ar.issuer = issuerAddress.address;
                     const imageUrl: string = await this.imageService.uploadAssetImage(ar.image);
                     ar.image = imageUrl;
-                    const result = await this.ethereumService.issueToken(ar );
-                    const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);                    
-                    if(ar.brokerId === undefined) {
+                    const result = await this.ethereumService.issueToken(ar);
+                    const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
+                    if (ar.brokerId === undefined) {
                         ar.brokerId = "0";
                     }
                     const asset: Asset = {
@@ -232,7 +126,7 @@ export class AssetsService {
                     const dbAsset = await this.assetRepository.save(asset);
                     resolve(dbAsset)
 
-                    if(ar.listImmediately) {
+                    if (ar.listImmediately) {
                         this.changeApprovalStatus(tokenId, true).then(changed => {
                             this.logger.debug("Asset Status Changed");
                         });
@@ -274,7 +168,7 @@ export class AssetsService {
                                 market: Market.PRIMARY
                             }
 
-                            await this.postOrder(or);
+                            await this.ordersService.postOrder(or, true);
                             asset = await this.assetRepository.save(asset);
                         }
                     }
@@ -285,5 +179,5 @@ export class AssetsService {
                 reject(error);
             }
         });
-    }    
+    }
 }

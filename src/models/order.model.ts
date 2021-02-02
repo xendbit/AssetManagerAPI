@@ -29,4 +29,6 @@ export class Order {
     status: OrderStatus;
     @Column()
     goodUntil: number;
+    @Column()
+    issuerIsSeller?: boolean;
 }

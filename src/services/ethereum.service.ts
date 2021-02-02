@@ -12,6 +12,7 @@ import { User } from 'src/models/user.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { AssetRequest } from 'src/request.objects/asset-request';
 import { NonceManager } from './nonce-manager.service';
+import { Market } from 'src/models/enums';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path')
@@ -78,6 +79,32 @@ export class EthereumService {
                 };
 
                 resolve(order);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    buy(orderKey: string, marketType: Market, user: User): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const poster = this.getAddressFromEncryptedPK(user.passphrase);                
+                const nonce: number = await NonceManager.getNonce(poster.address);
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
+            
+                const rawTransaction: TxData = {                    
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.buy(orderKey, marketType).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                transaction.sign(poster.privateKey);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
             } catch (error) {
                 reject(error);
             }

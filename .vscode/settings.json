@@ -1,0 +1,48 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "34.71.43.4",
+            "port": 4417,
+            "driver": "MySQL",
+            "name": "root",
+            "group": "xend",
+            "database": "xend",
+            "username": "root",
+            "password": "r3ALL45tr0ngp@55w0rd",
+            "connectionTimeout": 1000000
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "34.71.43.4",
+            "port": 4417,
+            "driver": "MySQL",
+            "name": "xend-artx",
+            "group": "xend",
+            "password": "r3ALL45tr0ngp@55w0rd",
+            "database": "xend_art",
+            "username": "xend_art"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "34.71.43.4",
+            "port": 4417,
+            "driver": "MySQL",
+            "name": "xend-exchange",
+            "group": "xend",
+            "database": "xend_v2",
+            "username": "xend",
+            "password": "r3ALL45tr0ngp@55w0rd",
+            "connectionTimeout": 1000000
+        }
+    ]
+}

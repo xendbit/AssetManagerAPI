@@ -20,6 +20,7 @@ import { PasswordReset } from './models/password.reset.model';
 import { Asset } from './models/asset.model';
 import { ImageService } from './services/image.service';
 import { ProvidusBankService } from './services/providus-bank.service';
+import { OrdersService } from './services/orders.service';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ProvidusBankService } from './services/providus-bank.service';
     EmailService,
     ImageService,
     ProvidusBankService,
+    OrdersService,
   ],
 })
 export class AppModule { }
