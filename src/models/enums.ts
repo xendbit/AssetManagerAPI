@@ -26,4 +26,5 @@ export enum Role {
     INVESTOR = 0,
     ADMIN = 1,
     ISSUER = 2,
+    BROKER = 3,
 }

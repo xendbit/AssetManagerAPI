@@ -7,11 +7,12 @@ import { Order } from 'src/models/order.model';
 import { TokenShares } from 'src/models/token.shares';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EthereumService } from './ethereum.service';
-import { Market, OrderType } from 'src/models/enums';
+import { Market, OrderStrategy, OrderType } from 'src/models/enums';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { AssetRequest } from 'src/request.objects/asset-request';
 import { Asset } from 'src/models/asset.model';
 import { ImageService } from './image.service';
+import { AdminService } from './admin.service';
 
 @Injectable()
 export class AssetsService {
@@ -40,6 +41,8 @@ export class AssetsService {
                     throw Error("Order with ID not found");
                 } else {
                     const blockOrder = await this.ethereumService.getOrder(order.key);
+                    blockOrder.id = order.id;
+                    this.orderRepository.save(blockOrder);
                     resolve(blockOrder);
                 }
             } catch (error) {
@@ -209,6 +212,9 @@ export class AssetsService {
                     ar.image = imageUrl;
                     const result = await this.ethereumService.issueToken(ar );
                     const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);                    
+                    if(ar.brokerId === undefined) {
+                        ar.brokerId = "0";
+                    }
                     const asset: Asset = {
                         tokenId: tokenId,
                         issuer: issuerAddress.address,
@@ -225,10 +231,59 @@ export class AssetsService {
                     //transferTokenOwnership
                     const dbAsset = await this.assetRepository.save(asset);
                     resolve(dbAsset)
+
+                    if(ar.listImmediately) {
+                        this.changeApprovalStatus(tokenId, true).then(changed => {
+                            this.logger.debug("Asset Status Changed");
+                        });
+                    }
                 }
             } catch (error) {
                 reject(error);
             }
         });
     }
+
+    async changeApprovalStatus(tokenId: number, status: boolean): Promise<boolean> {
+        status = JSON.parse(status + "");
+        return new Promise(async (resolve, reject) => {
+            try {
+                let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+                    .where("tokenId = :tokenId", { tokenId: tokenId })
+                    .getOne();
+
+                if (asset === undefined) {
+                    reject(`Asset with token-id ${tokenId} not found`);
+                } else {
+                    this.logger.debug(asset);
+                    const numStatus = status ? 1 : 0;
+                    if (asset.approved !== numStatus) {
+                        asset.approved = numStatus;
+                        if (status) {
+                            this.logger.debug('Putting Order Up for Sale');
+                            // Issue Sell Order for shares available from issuer                            
+                            const issuer: number = asset.issuerId;
+                            const or: OrderRequest = {
+                                amount: asset.sharesAvailable,
+                                goodUntil: 0,
+                                orderStrategy: OrderStrategy.GOOD_TILL_CANCEL,
+                                orderType: OrderType.SELL,
+                                price: asset.issuingPrice,
+                                tokenId: tokenId,
+                                userId: issuer,
+                                market: Market.PRIMARY
+                            }
+
+                            await this.postOrder(or);
+                            asset = await this.assetRepository.save(asset);
+                        }
+                    }
+
+                    resolve(status);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }    
 }

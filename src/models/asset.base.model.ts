@@ -7,69 +7,76 @@ export abstract class AssetBaseClass {
     tokenId?: number;
 
     @Column()
-    public issuer: string;
+    issuer: string;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public description: string;
+    description: string;
     
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public symbol: string;
+    symbol: string;
     
     @IsNumber()
     @ApiProperty()
     @Column()
-    public totalSupply: number;
+    totalSupply: number;
     
     @IsNumber()
     @ApiProperty()
     @Column()
-    public issuingPrice: number;
+    issuingPrice: number;
     
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public issuerId: number;
+    issuerId: number;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public artistName: string;
+    artistName: string;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public titleOfWork: string;
+    titleOfWork: string;
 
     @IsNotEmpty()
     @ApiProperty()    
-    public image: string;
+    image: string;
     
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public commission: number;
+    commission: number;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public price: number;
+    price: number;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column({width: 20, type: 'bigint'})
-    public createdOn: number;
+    createdOn: number;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public sharesAvailable: number;
+    sharesAvailable: number;
 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
-    public nameOfOwners: string;
+    nameOfOwners: string;
+
+    @ApiProperty()
+    @Column()
+    brokerId: string = "";
+
+    @ApiProperty()
+    listImmediately?: boolean = false;
 }

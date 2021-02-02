@@ -62,18 +62,19 @@ export class EthereumService {
 
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const blOrder = await contract.methods.getOrder(key).call();
+                this.logger.debug(blOrder);
                 const order: Order = {
-                    amountRemaining: blOrder.amountRemaining,
-                    buyer: blOrder.buyer,
-                    goodUntil: blOrder.goodUntil * 1000,
+                    amountRemaining: blOrder[6],
+                    buyer: blOrder[4],
+                    goodUntil: blOrder[10] * 1000,
                     key: key,
-                    orderStrategy: blOrder.orderStrategy,
-                    orderType: blOrder.orderType,
-                    originalAmount: blOrder.originalAmount,
-                    price: blOrder.price,
-                    seller: blOrder.seller,
-                    status: blOrder.status,
-                    tokenId: blOrder.tokenId,
+                    orderStrategy: blOrder[2],
+                    orderType: blOrder[1],
+                    originalAmount: blOrder[7],
+                    price: blOrder[8],
+                    seller: blOrder[3],
+                    status: blOrder[9],
+                    tokenId: blOrder[5],
                 };
 
                 resolve(order);

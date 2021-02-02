@@ -250,6 +250,10 @@ export class UserService {
                     imageUrl = await this.imageService.uploadAssetImage(uro.image);
                 }
 
+                if(uro.userId === undefined) {
+                    uro.userId = 0;
+                }
+
                 const user: User = {
                     password: passwordHashed,
                     passphrase: passphraseHashed,
@@ -262,6 +266,7 @@ export class UserService {
                     lastName: uro.lastName,
                     imageUrl: imageUrl,
                     activated: false,
+                    userId: uro.userId,
                 }
 
                 dbUser = await this.userRepository.save(user);

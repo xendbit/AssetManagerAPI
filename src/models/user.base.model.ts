@@ -46,4 +46,8 @@ export abstract class UserBase {
     
     @ApiProperty()
     image?: string
+
+    @Column()
+    @ApiProperty()
+    userId?: number;    
 }
