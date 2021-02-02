@@ -212,7 +212,7 @@ export class AssetsService {
                     const asset: Asset = {
                         tokenId: tokenId,
                         issuer: issuerAddress.address,
-                        imageUrl: "imageUrl",
+                        imageUrl: imageUrl,
                         approved: 0,
                         owner: tokenShares.owner,
                         sharesContract: tokenShares.sharesContract,
