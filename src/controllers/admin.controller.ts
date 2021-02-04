@@ -32,8 +32,8 @@ export class AdminController {
     @Post('under-subscribe/:tokenId')
     @Roles('admin')
     @ApiSecurity('api-key')
-    async underSubscribe(@Param("tokenId") tokenId: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.adminService.underSubscribe(tokenId));
+    async underSubscribed(@Param("tokenId") tokenId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.adminService.underSubscribed(tokenId));
     }
     
     @Get("primary-shares-remaining/:tokenId")

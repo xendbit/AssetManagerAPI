@@ -36,7 +36,7 @@ export class AdminService {
         });       
     }
 
-    async underSubscribe(tokenId: number): Promise<Asset> {
+    async underSubscribed(tokenId: number): Promise<Asset> {
         return new Promise(async (resolve, reject) => {
             try {
                 const asset: Asset = await this.assetRepository.createQueryBuilder("asset")
@@ -46,7 +46,7 @@ export class AdminService {
                     throw Error("Asset not found");
                 } 
                 await this._changeAssetMarket(tokenId, Market.UNDER_SUBSCRIBED);
-                await this.ethereumService.underSubscribe(tokenId);
+                await this.ethereumService.underSubscribed(tokenId);
                 resolve(asset);
             } catch (error) {
                 reject(error);

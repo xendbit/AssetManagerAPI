@@ -97,7 +97,7 @@ export class EthereumService {
         });
     }
 
-    underSubscribe(tokenId: number) {
+    underSubscribed(tokenId: number) {
         return new Promise(async (resolve, reject) => {
             try {
                 const nonce: number = await NonceManager.getNonce(this.contractor);
