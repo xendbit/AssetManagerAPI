@@ -1,11 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber } from "class-validator";
-import { Column } from 'typeorm';
+import { Column, Index } from 'typeorm';
 
 export abstract class AssetBaseClass {
+    @Index("token-id-idx") 
     @Column()
     tokenId?: number;
 
+    @Index("issuer-idx") 
     @Column()
     issuer: string;
 
@@ -29,6 +31,7 @@ export abstract class AssetBaseClass {
     @Column()
     issuingPrice: number;
     
+    @Index("issuer-id-idx") 
     @IsNotEmpty()
     @ApiProperty()
     @Column()
@@ -73,6 +76,7 @@ export abstract class AssetBaseClass {
     @Column()
     nameOfOwners: string;
 
+    @Index("broker-id-idx") 
     @ApiProperty()
     @Column()
     brokerId: string = "";

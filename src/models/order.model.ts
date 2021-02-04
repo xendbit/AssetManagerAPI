@@ -7,18 +7,28 @@ import { OrderStrategy, OrderType, OrderStatus } from "./enums";
 export class Order {
     @PrimaryGeneratedColumn()
     id?: number;
-    @Column()
+
+    @Index("key-idx") 
+    @Column()    
     key: string;
+
     @Column()
     orderType: OrderType;
     @Column()
     orderStrategy: OrderStrategy;
+    
+    @Index("seller-idx") 
     @Column()
     seller: string;
+
+    @Index("buyer-idx") 
     @Column()
     buyer: string;
+
+    @Index("token-id-idx") 
     @Column()
     tokenId: number;
+    
     @Column()
     amountRemaining: number;
     @Column()

@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, Index, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { AssetBaseClass } from "./asset.base.model";
 import { Market } from "./enums";
 
@@ -7,6 +7,7 @@ export class Asset extends AssetBaseClass {
     @PrimaryGeneratedColumn()
     id?: number;
 
+    @Index("owner-idx") 
     @Column()
     owner: string;
     

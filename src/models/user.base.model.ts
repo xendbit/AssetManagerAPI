@@ -1,9 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty } from "class-validator";
-import { Column } from "typeorm";
+import { Column, Index } from "typeorm";
 import { Role } from "./enums";
 
-export abstract class UserBase {
+export abstract class UserBase {    
     @ApiProperty()
     @IsNotEmpty()
     @Column()
@@ -14,6 +14,7 @@ export abstract class UserBase {
     @Column()
     password: string;
     
+    @Index("email-idx") 
     @ApiProperty()
     @IsNotEmpty()
     @Column()
@@ -24,6 +25,7 @@ export abstract class UserBase {
     @Column()
     role: Role
 
+    @Index("bvn-idx") 
     @ApiProperty()
     @IsNotEmpty()
     @Column()

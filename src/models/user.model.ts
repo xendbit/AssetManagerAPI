@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, Index, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Role } from "./enums";
 import { UserBase } from "./user.base.model";
 
@@ -8,6 +8,7 @@ export class User extends UserBase {
     @PrimaryGeneratedColumn()
     id?: number;    
 
+    @Index("ngnc-account-number-idx") 
     @Column()
     ngncAccountNumber: string;
 
