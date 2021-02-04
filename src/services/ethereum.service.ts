@@ -57,6 +57,18 @@ export class EthereumService {
         // );
     }
 
+    getSharesRemaining(tokenId: number): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                const sharesRemaining = await contract.methods.escrowBalance(tokenId).call();
+                resolve(sharesRemaining);
+            } catch (error) {
+                reject(error);
+            }
+        });                
+    }
+
     getOrder(key: string): Promise<Order> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -76,6 +88,7 @@ export class EthereumService {
                     seller: blOrder[3],
                     status: blOrder[9],
                     tokenId: blOrder[5],
+                    issuerIsSeller: false,
                 };
 
                 resolve(order);
@@ -85,7 +98,8 @@ export class EthereumService {
         });
     }
 
-    buy(orderKey: string, marketType: Market, user: User): Promise<string> {
+    buy(amount: number, orderKey: string, marketType: Market, user: User): Promise<string> {
+        this.logger.debug(`Buying order ${orderKey} on market ${marketType} for ${amount}`);
         return new Promise(async (resolve, reject) => {
             try {
                 const poster = this.getAddressFromEncryptedPK(user.passphrase);                
@@ -97,10 +111,11 @@ export class EthereumService {
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
                     value: "0x0",
-                    data: contract.methods.buy(orderKey, marketType).encodeABI(),
+                    data: contract.methods.buy(orderKey, marketType, amount).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
+                this.logger.debug(rawTransaction);
                 const transaction = new Transaction(rawTransaction, { common: this.chain });
                 transaction.sign(poster.privateKey);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))

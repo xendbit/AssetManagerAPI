@@ -15,6 +15,7 @@ export class AdminService {
 
     constructor() { }
 
+    // TODO: Change all market types.
     async changeAssetMarket(tokenId: number, market: Market): Promise<Market> {
         return new Promise(async (resolve, reject) => {
             try {

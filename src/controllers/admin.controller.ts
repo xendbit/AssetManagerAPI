@@ -1,8 +1,9 @@
-import { Controller, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AdminService } from 'src/services/admin.service';
 import { AssetsService } from 'src/services/assets.service';
+import { EthereumService } from 'src/services/ethereum.service';
 import { Response, ResponseUtils } from 'src/utils';
 
 @ApiTags('admin')
@@ -10,7 +11,8 @@ import { Response, ResponseUtils } from 'src/utils';
 export class AdminController {
     constructor(
         private adminService: AdminService,
-        private assetService: AssetsService
+        private assetService: AssetsService,
+        private ethereumService: EthereumService
     ) {}    
 
     @Post('change-approval-status/:tokenId/:status')
@@ -25,5 +27,10 @@ export class AdminController {
     @ApiSecurity('api-key')
     async changeAssetMarket(@Param("tokenId") tokenId: number, @Param("market") market: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.adminService.changeAssetMarket(tokenId, market));
-    }        
+    }    
+    
+    @Get("primary-shares-remaining/:tokenId")
+    async getSharesRemaining(@Param("tokenId") tokenId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.ethereumService.getSharesRemaining(tokenId));
+    }
 }

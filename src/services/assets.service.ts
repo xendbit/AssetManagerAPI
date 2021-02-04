@@ -126,7 +126,7 @@ export class AssetsService {
                     const dbAsset = await this.assetRepository.save(asset);
                     resolve(dbAsset)
 
-                    if (ar.listImmediately) {
+                    if (ar.listImmediately !== undefined && ar.listImmediately === true) {
                         this.changeApprovalStatus(tokenId, true).then(changed => {
                             this.logger.debug("Asset Status Changed");
                         });

@@ -8,7 +8,7 @@ import { User } from 'src/models/user.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { Utils } from 'src/utils';
 import { Repository } from 'typeorm';
-import { EthereumService } from './ethereum.service';
+import { Address, EthereumService } from './ethereum.service';
 
 @Injectable()
 export class OrdersService {
@@ -36,6 +36,7 @@ export class OrdersService {
                 } else {
                     const blockOrder = await this.ethereumService.getOrder(order.key);
                     blockOrder.id = order.id;
+                    blockOrder.issuerIsSeller = order.issuerIsSeller;
                     this.orderRepository.save(blockOrder);
                     resolve(blockOrder);
                 }
@@ -82,44 +83,50 @@ export class OrdersService {
         return new Promise(async (resolve, reject) => {
             try {
                 const poster = await this.userRepository.findOne(or.userId);
+                const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
 
                 if (or.market === Market.PRIMARY && !isIssue) {
                     const dbOrder: Order = await this.orderRepository.createQueryBuilder("asset")
-                    .where("tokenId = :tid", { tid: or.tokenId })
-                    .andWhere("issuerIsSeller = true")
-                    .getOne();
+                        .where("tokenId = :tid", { tid: or.tokenId })
+                        .andWhere("issuerIsSeller = true")
+                        .getOne();
 
                     if (dbOrder === undefined) {
                         reject("Primary Market Issue Order not found");
                     } else {
-                        await this.ethereumService.buy(dbOrder.key, Market.PRIMARY, poster);
+                        await this.ethereumService.buy(or.amount, dbOrder.key, Market.PRIMARY, poster);
                         const updatedOrder = await this.ethereumService.getOrder(dbOrder.key);
                         updatedOrder.id = dbOrder.id;
+                        updatedOrder.issuerIsSeller = dbOrder.issuerIsSeller;
                         this.orderRepository.save(updatedOrder);
+
+                        this.saveUserAsset(or.tokenId, posterAddress);
                         resolve(dbOrder);
                     }
                 }
 
-                if(or.orderId !== undefined) {
+                if (or.orderId !== undefined) {
                     const dbOrder: Order = await this.orderRepository.findOne(or.orderId);
-                    if(dbOrder === undefined) {
+                    if (dbOrder === undefined) {
                         reject(`Order with id ${or.orderId} not found`);
                     } else {
-                        await this.ethereumService.buy(dbOrder.key, Market.PRIMARY, poster);
+                        await this.ethereumService.buy(or.amount, dbOrder.key, Market.PRIMARY, poster);
                         const updatedOrder = await this.ethereumService.getOrder(dbOrder.key);
                         updatedOrder.id = dbOrder.id;
+                        updatedOrder.issuerIsSeller = dbOrder.issuerIsSeller;
                         this.orderRepository.save(updatedOrder);
+
+                        this.saveUserAsset(or.tokenId, posterAddress);
                         resolve(dbOrder);
                     }
                 }
 
                 const key = Utils.getKey(or);
-                or.key = key;                
+                or.key = key;
                 if (poster === undefined) {
                     reject(`User with id: ${or.userId} not found`);
                 }
-
-                const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
+                
                 this.logger.debug(OrderType[or.orderType]);
                 if (OrderType[or.orderType] === 'BUY') {
                     const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
@@ -136,30 +143,14 @@ export class OrdersService {
 
                 await this.ethereumService.postOrder(or, poster);
                 let order = await this.ethereumService.getOrder(key);
-                if (or.orderType === OrderType.SELL) {
+                if (or.orderType === OrderType.SELL && isIssue) {
                     order.issuerIsSeller = isIssue;
                 } else {
                     order.issuerIsSeller = false;
                 }
                 order = await this.orderRepository.save(order);
 
-                // check if the user has this asset, if not post it
-                let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
-                    .where("owner = :owner", { owner: posterAddress.address })
-                    .andWhere("tokenId = :ti", { ti: or.tokenId })
-                    .getOne();
-
-                if (asset === undefined) {
-                    asset = (await this.assetRepository.createQueryBuilder("asset")
-                        .andWhere("tokenId = :ti", { ti: or.tokenId })
-                        .getMany())[0];
-
-                    const newAsset: Asset = { ...asset };
-                    newAsset.owner = posterAddress.address;
-                    newAsset.id = undefined;
-                    await this.assetRepository.save(newAsset);
-                }
-
+                this.saveUserAsset(or.tokenId, posterAddress);
                 resolve(order);
             } catch (error) {
                 reject(error);
@@ -167,4 +158,22 @@ export class OrdersService {
         });
     }
 
+    async saveUserAsset(tokenId: number, posterAddress: Address) {
+        // check if the user has this asset, if not post it
+        let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+            .where("owner = :owner", { owner: posterAddress.address })
+            .andWhere("tokenId = :ti", { ti: tokenId })
+            .getOne();
+
+        if (asset === undefined) {
+            asset = (await this.assetRepository.createQueryBuilder("asset")
+                .andWhere("tokenId = :ti", { ti: tokenId })
+                .getMany())[0];
+
+            const newAsset: Asset = { ...asset };
+            newAsset.owner = posterAddress.address;
+            newAsset.id = undefined;
+            await this.assetRepository.save(newAsset);
+        }
+    }
 }

@@ -30,5 +30,5 @@ export class Order {
     @Column()
     goodUntil: number;
     @Column()
-    issuerIsSeller?: boolean;
+    issuerIsSeller: boolean;
 }
