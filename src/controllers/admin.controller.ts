@@ -22,12 +22,19 @@ export class AdminController {
         return ResponseUtils.getSuccessResponse(await this.assetService.changeApprovalStatus(tokenId, status));
     }    
 
-    @Post('change-asset-market/:tokenId/:market')
+    @Post('conclude-primary-sales/:tokenId')
     @Roles('admin')
     @ApiSecurity('api-key')
-    async changeAssetMarket(@Param("tokenId") tokenId: number, @Param("market") market: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.adminService.changeAssetMarket(tokenId, market));
+    async concludePrimarySales(@Param("tokenId") tokenId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.adminService.concludePrimarySales(tokenId));
     }    
+
+    @Post('under-subscribe/:tokenId')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async underSubscribe(@Param("tokenId") tokenId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.adminService.underSubscribe(tokenId));
+    }
     
     @Get("primary-shares-remaining/:tokenId")
     async getSharesRemaining(@Param("tokenId") tokenId: number): Promise<Response> {

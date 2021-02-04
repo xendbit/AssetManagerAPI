@@ -66,13 +66,68 @@ export class EthereumService {
             } catch (error) {
                 reject(error);
             }
-        });                
+        });
     }
+
+    concludePrimaryMarket(tokenId: number) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await NonceManager.getNonce(this.contractor);
+                this.logger.debug(`Transaction Count: ${nonce}`);
+
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.concludePrimarySales(tokenId).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                this.logger.debug(rawTransaction);
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
+                transaction.sign(this.contractorPK);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    underSubscribe(tokenId: number) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await NonceManager.getNonce(this.contractor);
+                this.logger.debug(`Transaction Count: ${nonce}`);
+
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.underSubscribed(tokenId).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                this.logger.debug(rawTransaction);
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
+                transaction.sign(this.contractorPK);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }    
 
     getOrder(key: string): Promise<Order> {
         return new Promise(async (resolve, reject) => {
             try {
-
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const blOrder = await contract.methods.getOrder(key).call();
                 this.logger.debug(blOrder);
@@ -102,11 +157,11 @@ export class EthereumService {
         this.logger.debug(`Buying order ${orderKey} on market ${marketType} for ${amount}`);
         return new Promise(async (resolve, reject) => {
             try {
-                const poster = this.getAddressFromEncryptedPK(user.passphrase);                
+                const poster = this.getAddressFromEncryptedPK(user.passphrase);
                 const nonce: number = await NonceManager.getNonce(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
-            
-                const rawTransaction: TxData = {                    
+
+                const rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
@@ -127,14 +182,14 @@ export class EthereumService {
     }
 
     postOrder(or: OrderRequest, user: User): Promise<string> {
-        const goodUntil = new Date(or.goodUntil).getTime() / 1000;        
+        const goodUntil = new Date(or.goodUntil).getTime() / 1000;
         return new Promise(async (resolve, reject) => {
             try {
-                const poster = this.getAddressFromEncryptedPK(user.passphrase);                
+                const poster = this.getAddressFromEncryptedPK(user.passphrase);
                 const nonce: number = await NonceManager.getNonce(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
-            
-                const rawTransaction: TxData = {                    
+
+                const rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: this.contractAddress,
@@ -188,7 +243,7 @@ export class EthereumService {
 
     async transferTokenOwnership(tokenId: number, newOwner: string | number, previousOwner: Address): Promise<string> {
         return new Promise(async (resolve, reject) => {
-            try {                
+            try {
                 const nonce: number = await NonceManager.getNonce(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: previousOwner.address });
 
@@ -213,7 +268,7 @@ export class EthereumService {
     }
 
     // minting
-    issueToken(ar: AssetRequest): Promise<string> {       
+    issueToken(ar: AssetRequest): Promise<string> {
         this.logger.debug(ar);
         return new Promise(async (resolve, reject) => {
             try {
@@ -260,7 +315,7 @@ export class EthereumService {
         const path = "m/44'/60'/0'/0/0";
         const addrNode: EthereumHDKey = root.derivePath(path);
         const pk: Buffer = addrNode.getWallet().getPrivateKey();
-        this.logger.debug(addrNode.getWallet().getAddressString());        
+        this.logger.debug(addrNode.getWallet().getAddressString());
         return {
             address: addrNode.getWallet().getAddressString(),
             privateKey: pk
@@ -326,7 +381,7 @@ export class EthereumService {
         this.logger.debug("checking if user require gas");
         const availableGas: number = +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
         this.logger.debug(`availableGas: ${availableGas}`);
-        if(availableGas < +process.env.DAI_LOW_GAS_LIMIT) {
+        if (availableGas < +process.env.DAI_LOW_GAS_LIMIT) {
             // gas depleted, give some gas
             this.logger.debug(`Gas Depleted, Giving ${address} some gas`);
             const xendPK = this.contractorPK;
@@ -337,18 +392,18 @@ export class EthereumService {
             var rawTransaction: TxData = {
                 gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                 gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
-            to: address,
+                to: address,
                 value: this.web3.utils.toHex(this.web3.utils.toWei(process.env.DAI_LOW_GAS_LIMIT, "ether")),
                 nonce: this.web3.utils.toHex(nonce)
             }
-         
-            const transaction = new Transaction(rawTransaction, {common: this.chain});       
+
+            const transaction = new Transaction(rawTransaction, { common: this.chain });
             transaction.sign(xendPK);
             this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
                 this.logger.debug(`Gas funding for ${address} successful`);
-            }); 
-        } 
-    }    
+            });
+        }
+    }
 }
 
 

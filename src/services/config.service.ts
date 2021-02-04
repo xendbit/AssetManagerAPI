@@ -73,6 +73,11 @@ export class ConfigService {
                     code: Market.SECONDARY,                    
                 },
                 {
+                    type: 'Under Subscribed',
+                    name: 'UnderSubscribed',
+                    code: Market.UNDER_SUBSCRIBED,                    
+                },                
+                {
                     type: 'Role',
                     name: 'Investor',
                     code: Role.INVESTOR,
