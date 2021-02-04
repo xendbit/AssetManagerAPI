@@ -15,21 +15,16 @@ export class AdminService {
 
     constructor() { }
 
-    // TODO: Change all market types.
     async changeAssetMarket(tokenId: number, market: Market): Promise<Market> {
         return new Promise(async (resolve, reject) => {
             try {
-                let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+                let updateResult = await this.assetRepository.createQueryBuilder("asset")
+                    .update(Asset)
+                    .set({market: market})
                     .where("tokenId = :tokenId", { tokenId: tokenId })
-                    .getOne();
+                    .execute();
 
-                if (asset === undefined) {
-                    reject(`Asset with token-id ${tokenId} not found`);
-                } else {
-                    asset.market = market;
-                    this.assetRepository.save(asset);
-                    resolve(market);
-                }
+                resolve(market);
             } catch (error) {
                 reject(error);
             }
