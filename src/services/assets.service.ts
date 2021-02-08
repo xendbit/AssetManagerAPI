@@ -57,7 +57,8 @@ export class AssetsService {
         const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
 
         const qb = this.assetRepository.createQueryBuilder("asset")
-            .where("issuer = :issuer", { issuer: issuerAddress.address });
+            .where("issuer = :issuer", { issuer: issuerAddress.address })
+            .andWhere("owner = :owner", {owner: issuerAddress.address});
 
         return paginate<Asset>(qb, options);
     }
