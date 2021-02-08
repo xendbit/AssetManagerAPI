@@ -170,6 +170,10 @@ export class AssetsService {
 
                             await this.ordersService.postOrder(or, true);
                             asset = await this.assetRepository.save(asset);
+                        } else {
+                            asset.approved = 0;
+                            asset.market = Market.DECLINED;
+                            asset = await this.assetRepository.save(asset);
                         }
                     }
 

@@ -73,6 +73,11 @@ export class ConfigService {
                     code: Market.SECONDARY,                    
                 },
                 {
+                    type: 'Declined',
+                    name: 'Declined',
+                    code: Market.DECLINED,                    
+                },                
+                {
                     type: 'Under Subscribed',
                     name: 'UnderSubscribed',
                     code: Market.UNDER_SUBSCRIBED,                    

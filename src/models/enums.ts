@@ -21,6 +21,7 @@ export enum Market {
     PRIMARY = 0,
     SECONDARY = 1,
     UNDER_SUBSCRIBED = 2,
+    DECLINED = 3,
 }
 
 export enum Role {
