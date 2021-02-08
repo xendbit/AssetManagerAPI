@@ -4,6 +4,7 @@ import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginat
 import { Asset } from 'src/models/asset.model';
 import { Market, OrderType } from 'src/models/enums';
 import { Order } from 'src/models/order.model';
+import { UserAssets } from 'src/models/user.assets.model';
 import { User } from 'src/models/user.model';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { Utils } from 'src/utils';
@@ -19,6 +20,8 @@ export class OrdersService {
     private userRepository: Repository<User>
     @InjectRepository(Asset)
     private assetRepository: Repository<Asset>
+    @InjectRepository(UserAssets)
+    private userAssetsRepository: Repository<UserAssets>
 
     private readonly logger = new Logger(OrdersService.name);
 
@@ -100,7 +103,7 @@ export class OrdersService {
                         updatedOrder.issuerIsSeller = dbOrder.issuerIsSeller;
                         this.orderRepository.save(updatedOrder);
 
-                        this.saveUserAsset(or.tokenId, posterAddress);
+                        this.saveUserAsset(or.tokenId, poster);
                         resolve(dbOrder);
                     }
                 }
@@ -116,7 +119,7 @@ export class OrdersService {
                         updatedOrder.issuerIsSeller = dbOrder.issuerIsSeller;
                         this.orderRepository.save(updatedOrder);
 
-                        this.saveUserAsset(or.tokenId, posterAddress);
+                        this.saveUserAsset(or.tokenId, poster);
                         resolve(dbOrder);
                     }
                 }
@@ -126,7 +129,7 @@ export class OrdersService {
                 if (poster === undefined) {
                     reject(`User with id: ${or.userId} not found`);
                 }
-                
+
                 this.logger.debug(OrderType[or.orderType]);
                 if (OrderType[or.orderType] === 'BUY') {
                     const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
@@ -150,7 +153,7 @@ export class OrdersService {
                 }
                 order = await this.orderRepository.save(order);
 
-                this.saveUserAsset(or.tokenId, posterAddress);
+                this.saveUserAsset(or.tokenId, poster);
                 resolve(order);
             } catch (error) {
                 reject(error);
@@ -158,22 +161,26 @@ export class OrdersService {
         });
     }
 
-    async saveUserAsset(tokenId: number, posterAddress: Address) {
+    async saveUserAsset(tokenId: number, poster: User) {
         // check if the user has this asset, if not post it
-        let asset: Asset = await this.assetRepository.createQueryBuilder("asset")
-            .where("owner = :owner", { owner: posterAddress.address })
-            .andWhere("tokenId = :ti", { ti: tokenId })
+        const asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+        .where("tokenId = :ti", { "ti": tokenId })
+        .getOne();
+
+        let userAsset: UserAssets = await this.userAssetsRepository.createQueryBuilder("userAssets")
+            .where("user_id = :uid", { uid: poster.id })
+            .andWhere("token_id = :ti", { ti: tokenId })
+            .andWhere("asset_id = :aid", {aid: asset.id})
             .getOne();
 
-        if (asset === undefined) {
-            asset = (await this.assetRepository.createQueryBuilder("asset")
-                .andWhere("tokenId = :ti", { ti: tokenId })
-                .getMany())[0];
+        if (userAsset === undefined) {
+            userAsset = {
+                user_id: poster.id,
+                token_id: tokenId,
+                asset_id: asset.id
+            }
 
-            const newAsset: Asset = { ...asset };
-            newAsset.owner = posterAddress.address;
-            newAsset.id = undefined;
-            await this.assetRepository.save(newAsset);
+            await this.userAssetsRepository.save(userAsset);
         }
     }
 }

@@ -21,12 +21,13 @@ import { Asset } from './models/asset.model';
 import { ImageService } from './services/image.service';
 import { ProvidusBankService } from './services/providus-bank.service';
 import { OrdersService } from './services/orders.service';
+import { UserAssets } from './models/user.assets.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset]),
+    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets]),
     MailerModule.forRoot({  
       transport: process.env.EMAIL_URL,
       defaults: {

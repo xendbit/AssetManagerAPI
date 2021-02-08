@@ -13,6 +13,7 @@ import { AssetRequest } from 'src/request.objects/asset-request';
 import { Asset } from 'src/models/asset.model';
 import { ImageService } from './image.service';
 import { OrdersService } from './orders.service';
+import { UserAssets } from 'src/models/user.assets.model';
 
 @Injectable()
 export class AssetsService {
@@ -69,10 +70,9 @@ export class AssetsService {
             throw Error("Owner not found");
         }
 
-        const ownerAddress = await this.ethereumService.getAddressFromEncryptedPK(ownerUser.passphrase);
-
         const qb = this.assetRepository.createQueryBuilder("asset")
-            .where("owner = :owner", { owner: ownerAddress.address });
+            .leftJoin(UserAssets, "userAssets", "asset.id = userAssets.asset_id")
+            .where("userAssets.user_id = :uid", {uid: ownerUser.id});
 
         return paginate<Asset>(qb, options);
     }
