@@ -46,7 +46,7 @@ export class OrdersService {
             } catch (error) {
                 reject(error);
             }
-        })
+        });
     }
 
     async listOrders(options: IPaginationOptions): Promise<Pagination<Order>> {
