@@ -89,6 +89,10 @@ export class AssetsService {
                     throw new Error(`Issuer with id ${ar.issuerId} not found`);
                 }
 
+                if(ar.sharesAvailable > ar.totalSupply) {
+                    reject("Available shares can not be greater than total supply");
+                }
+
                 const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
 
                 const asset = await this.assetRepository.createQueryBuilder("asset")

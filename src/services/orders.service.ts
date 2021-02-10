@@ -113,7 +113,7 @@ export class OrdersService {
                     if (dbOrder === undefined) {
                         reject(`Order with id ${or.orderId} not found`);
                     } else {
-                        await this.ethereumService.buy(or.amount, dbOrder.key, Market.PRIMARY, poster);
+                        await this.ethereumService.buy(or.amount, dbOrder.key, or.market, poster);
                         const updatedOrder = await this.ethereumService.getOrder(dbOrder.key);
                         updatedOrder.id = dbOrder.id;
                         updatedOrder.issuerIsSeller = dbOrder.issuerIsSeller;
