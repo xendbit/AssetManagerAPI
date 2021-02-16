@@ -17,4 +17,7 @@ export class User extends UserBase {
 
     @Column({type: 'tinyint', width: 1})
     activated: boolean;
+
+    @Column({type: 'tinyint', width: 1})
+    approved: boolean;    
 }

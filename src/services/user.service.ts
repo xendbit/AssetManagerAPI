@@ -49,6 +49,18 @@ export class UserService {
         });
     }
 
+    async approveUser(id: number): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const user: User = await this.userRepository.findOne(id);
+                user.approved = true;
+                resolve(this.userRepository.save(user));
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }    
+
     async changePassword(pro: PasswordResetRequest): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -266,6 +278,7 @@ export class UserService {
                     lastName: uro.lastName,
                     imageUrl: imageUrl,
                     activated: false,
+                    approved: false,
                     userId: uro.userId,
                 }
 
