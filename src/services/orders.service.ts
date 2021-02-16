@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Asset } from 'src/models/asset.model';
-import { Market, OrderType } from 'src/models/enums';
+import { Market, OrderStrategy, OrderType } from 'src/models/enums';
 import { Order } from 'src/models/order.model';
 import { UserAssets } from 'src/models/user.assets.model';
 import { User } from 'src/models/user.model';
@@ -87,6 +87,13 @@ export class OrdersService {
             try {
                 const poster = await this.userRepository.findOne(or.userId);
                 const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
+                const asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+                    .where("tokenId = :ti", { "ti": or.tokenId })
+                    .getOne();                
+
+                if(or.orderStrategy === OrderStrategy.MARKET_ORDER) {
+                    or.price = asset.marketPrice;
+                }
 
                 if (or.market === Market.PRIMARY && !isIssue) {
                     const dbOrder: Order = await this.orderRepository.createQueryBuilder("asset")
@@ -121,6 +128,7 @@ export class OrdersService {
 
                         this.saveUserAsset(or.tokenId, poster);
                         resolve(dbOrder);
+                        this.movePrice(or);
                     }
                 }
 
@@ -155,10 +163,25 @@ export class OrdersService {
 
                 this.saveUserAsset(or.tokenId, poster);
                 resolve(order);
+
+                this.movePrice(or);
             } catch (error) {
                 reject(error);
             }
         });
+    }
+
+    async movePrice(or: OrderRequest) {
+        // Get Asset
+        const asset: Asset = await this.assetRepository.createQueryBuilder("asset")
+            .where("tokenId = :ti", { "ti": or.tokenId })
+            .getOne();
+        const fivePercentile = (+process.env.MARKET_PRICE_MOVER/100) * asset.sharesAvailable;
+
+        if(or.amount > fivePercentile) {
+            asset.marketPrice = or.price;
+            this.assetRepository.save(asset);
+        }
     }
 
     async saveUserAsset(tokenId: number, poster: User) {

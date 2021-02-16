@@ -22,4 +22,7 @@ export class Asset extends AssetBaseClass {
 
     @Column()
     market: Market;
+
+    @Column()
+    marketPrice: number;
 }

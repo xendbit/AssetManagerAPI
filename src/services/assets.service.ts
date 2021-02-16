@@ -121,6 +121,7 @@ export class AssetsService {
                         owner: tokenShares.owner,
                         sharesContract: tokenShares.sharesContract,
                         market: Market.PRIMARY,
+                        marketPrice: ar.issuingPrice,
                         ...ar
                     };
 
