@@ -29,12 +29,15 @@ import { FeesController } from './controllers/fees.controller';
 import { MarketSettingsController } from './controllers/market-settings.controller';
 import { MarketSettingsService } from './services/market-settings.service';
 import { MarketSettings } from './models/market.settings.model';
+import { HolidaysService } from './services/holidays.service';
+import { HolidaysController } from './controllers/holidays.controller';
+import { Holiday } from './models/holidays.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees, MarketSettings]),
+    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees, MarketSettings, Holiday]),
     MailerModule.forRoot({  
       transport: process.env.EMAIL_URL,
       defaults: {
@@ -49,6 +52,7 @@ import { MarketSettings } from './models/market.settings.model';
     AdminController,
     FeesController,
     MarketSettingsController,
+    HolidaysController,
   ],
   providers: [
     {
@@ -67,6 +71,7 @@ import { MarketSettings } from './models/market.settings.model';
     SmsService,
     FeesService,
     MarketSettingsService,
+    HolidaysService,
   ],
 })
 export class AppModule { }
