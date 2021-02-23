@@ -23,12 +23,15 @@ import { ProvidusBankService } from './services/providus-bank.service';
 import { OrdersService } from './services/orders.service';
 import { UserAssets } from './models/user.assets.model';
 import { SmsService } from './services/sms.service';
+import { FeesService } from './services/fees.service';
+import { Fees } from './models/fees.model';
+import { FeesController } from './controllers/fees.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets]),
+    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees]),
     MailerModule.forRoot({  
       transport: process.env.EMAIL_URL,
       defaults: {
@@ -41,6 +44,7 @@ import { SmsService } from './services/sms.service';
     UserController,
     ConfigController,
     AdminController,
+    FeesController,
   ],
   providers: [
     {
@@ -57,6 +61,7 @@ import { SmsService } from './services/sms.service';
     ProvidusBankService,
     OrdersService,
     SmsService,
+    FeesService,
   ],
 })
 export class AppModule { }
