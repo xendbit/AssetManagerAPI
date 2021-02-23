@@ -26,12 +26,15 @@ import { SmsService } from './services/sms.service';
 import { FeesService } from './services/fees.service';
 import { Fees } from './models/fees.model';
 import { FeesController } from './controllers/fees.controller';
+import { MarketSettingsController } from './controllers/market-settings.controller';
+import { MarketSettingsService } from './services/market-settings.service';
+import { MarketSettings } from './models/market.settings.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees]),
+    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees, MarketSettings]),
     MailerModule.forRoot({  
       transport: process.env.EMAIL_URL,
       defaults: {
@@ -45,6 +48,7 @@ import { FeesController } from './controllers/fees.controller';
     ConfigController,
     AdminController,
     FeesController,
+    MarketSettingsController,
   ],
   providers: [
     {
@@ -62,6 +66,7 @@ import { FeesController } from './controllers/fees.controller';
     OrdersService,
     SmsService,
     FeesService,
+    MarketSettingsService,
   ],
 })
 export class AppModule { }
