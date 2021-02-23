@@ -22,6 +22,7 @@ import { ImageService } from './services/image.service';
 import { ProvidusBankService } from './services/providus-bank.service';
 import { OrdersService } from './services/orders.service';
 import { UserAssets } from './models/user.assets.model';
+import { SmsService } from './services/sms.service';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { UserAssets } from './models/user.assets.model';
     ImageService,
     ProvidusBankService,
     OrdersService,
+    SmsService,
   ],
 })
 export class AppModule { }
