@@ -40,6 +40,7 @@ export class OrdersService {
                     throw Error("Order with ID not found");
                 } else {
                     order.orderIsCancelled = true;
+                    order.amountRemaining = 0;
                     this.orderRepository.save(order);
                     resolve(order);
                 }
