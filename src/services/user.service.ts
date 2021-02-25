@@ -280,6 +280,8 @@ export class UserService {
                     activated: false,
                     approved: false,
                     userId: uro.userId,
+                    phoneNumber: uro.phoneNumber,
+                    address: uro.address
                 }
 
                 dbUser = await this.userRepository.save(user);

@@ -41,4 +41,6 @@ export class Order {
     goodUntil: number;
     @Column()
     issuerIsSeller: boolean;
+    @Column()
+    orderIsCancelled: boolean = false;
 }

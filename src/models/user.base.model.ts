@@ -20,6 +20,12 @@ export abstract class UserBase {
     @Column()
     email: string;    
 
+    @Index("phone-number-idx") 
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    phoneNumber: string;        
+
     @ApiProperty()
     @IsNotEmpty()
     @Column()
@@ -52,4 +58,9 @@ export abstract class UserBase {
     @Column()
     @ApiProperty()
     userId?: number;    
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    address: string    
 }

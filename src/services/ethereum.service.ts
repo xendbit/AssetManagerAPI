@@ -144,6 +144,7 @@ export class EthereumService {
                     status: blOrder[9],
                     tokenId: blOrder[5],
                     issuerIsSeller: false,
+                    orderIsCancelled: false,
                 };
 
                 resolve(order);

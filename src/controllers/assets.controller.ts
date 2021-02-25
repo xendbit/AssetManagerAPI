@@ -50,7 +50,7 @@ export class AssetsController {
             limit,
             route: '/v3/assets',
         }, ownerId));
-    }    
+    }
 
     @Get('')
     async listAssets(@Query('page') page: number, @Query('limit') limit: number): Promise<Response> {
@@ -107,6 +107,13 @@ export class AssetsController {
     @Get('orders/:id')
     async findOrderByKey(@Param("id") id: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.ordersService.findOrderById(id));
+    }
+
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    @Post('cancel-order/:id')
+    async cancelOrder(@Param("id") id: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.ordersService.cancelOrder(id));
     }
 
 }
