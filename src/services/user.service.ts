@@ -39,6 +39,20 @@ export class UserService {
         return paginate<User>(this.userRepository, options);
     }
 
+    async listUsersByRole(role: number): Promise<User[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const users = await this.userRepository.createQueryBuilder("user")
+                    .where("role = :role", { role: role })
+                    .getMany();
+
+                resolve(users);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async getUserById(id: number): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -59,7 +73,7 @@ export class UserService {
                 reject(error);
             }
         });
-    }    
+    }
 
     async changePassword(pro: PasswordResetRequest): Promise<string> {
         return new Promise(async (resolve, reject) => {
@@ -169,12 +183,10 @@ export class UserService {
         });
     }
 
-    async fundWallet(accountNumber: string, amount: number): Promise<string> {
+    async fundWallet(userId: number, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const dbUser = await this.userRepository.createQueryBuilder("user")
-                    .where("ngncAccountNumber = :nan", { nan: accountNumber })
-                    .getOne()
+                const dbUser = await this.userRepository.findOne(userId);
                 if (dbUser === undefined) {
                     throw Error('User with ID not found');
                 }
@@ -252,9 +264,9 @@ export class UserService {
                 }
 
                 let ngncAccountNumber = "0000000000";
-                if (uro.role !== Role.ADMIN && uro.bvn !== "11111111111" && +uro.bvn !== 11111111111) {
-                    ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
-                }
+                // if (uro.role !== Role.ADMIN && uro.bvn !== "11111111111" && +uro.bvn !== 11111111111) {
+                //     ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
+                // }
 
                 let imageUrl = '';
                 if (uro.image === undefined || uro.image === '') {
@@ -262,7 +274,7 @@ export class UserService {
                     imageUrl = await this.imageService.uploadAssetImage(uro.image);
                 }
 
-                if(uro.userId === undefined) {
+                if (uro.userId === undefined) {
                     uro.userId = 0;
                 }
 

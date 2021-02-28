@@ -50,11 +50,11 @@ export class UserController {
         return ResponseUtils.getSuccessResponse(await this.userService.login(lr));
     }
 
-    @Get('fund-wallet/:accountNumber/:amount')
+    @Get('fund-wallet/:userId/:amount')
     @Roles('admin')
     @ApiSecurity('api-key')
-    async fundWallet(@Param('accountNumber') accountNumber: string, @Param('amount') amount: number): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.userService.fundWallet(accountNumber, amount));
+    async fundWallet(@Param('accountNumber') userId: number, @Param('amount') amount: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.fundWallet(userId, amount));
     }
 
     @Get('wallet-balance/:userId')
@@ -84,5 +84,10 @@ export class UserController {
     @Get('confirm-email/:tag')
     async confirmEmail(@Param('tag') tag: string): Promise<string> {
         return await this.userService.confirmEmail(tag);
+    }
+
+    @Get('users-by-role/:role')
+    async getUsersByType(@Param('role') role: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.listUsersByRole(role));
     }
 }

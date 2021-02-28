@@ -286,7 +286,7 @@ export class EthereumService {
                         ar.tokenId,
                         ar.symbol,
                         ar.totalSupply,
-                        ar.issuingPrice,
+                        this.web3.utils.toHex(ar.issuingPrice + ''),
                         ar.issuer,
                         ar.image
                     ).encodeABI(),
