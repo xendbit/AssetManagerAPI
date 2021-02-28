@@ -53,7 +53,7 @@ export class UserController {
     @Get('fund-wallet/:userId/:amount')
     @Roles('admin')
     @ApiSecurity('api-key')
-    async fundWallet(@Param('accountNumber') userId: number, @Param('amount') amount: number): Promise<Response> {
+    async fundWallet(@Param('userId') userId: number, @Param('amount') amount: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.fundWallet(userId, amount));
     }
 
