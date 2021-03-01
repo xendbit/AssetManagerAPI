@@ -11,6 +11,7 @@ import { Utils } from 'src/utils';
 import { Repository } from 'typeorm';
 import { Address, EthereumService } from './ethereum.service';
 import { SmsService } from './sms.service';
+import { MarketSettingsService } from './market-settings.service';
 
 @Injectable()
 export class OrdersService {
@@ -29,6 +30,7 @@ export class OrdersService {
     constructor(
         private ethereumService: EthereumService,
         private smsService: SmsService,
+        private marketService: MarketSettingsService
     ) {
     }
 
@@ -228,7 +230,11 @@ export class OrdersService {
         const asset: Asset = await this.assetRepository.createQueryBuilder("asset")
             .where("tokenId = :ti", { "ti": or.tokenId })
             .getOne();
-        const fivePercentile = (+process.env.MARKET_PRICE_MOVER / 100) * asset.sharesAvailable;
+        const priceMoverPerc = (await this.marketService.getMarketSettings()).percPriceChangeLimit;
+
+        this.logger.debug('Price Mover Perc: ' + priceMoverPerc);
+
+        const fivePercentile = (+priceMoverPerc / 100) * asset.sharesAvailable;
 
         let amountBought = or.originalAmount - or.amountRemaining;
         if (amountBought > fivePercentile) {
