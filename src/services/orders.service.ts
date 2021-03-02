@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { Asset } from 'src/models/asset.model';
-import { Market, OrderStrategy, OrderType } from 'src/models/enums';
+import { Market, OrderStatus, OrderStrategy, OrderType } from 'src/models/enums';
 import { Order } from 'src/models/order.model';
 import { UserAssets } from 'src/models/user.assets.model';
 import { User } from 'src/models/user.model';
@@ -105,11 +105,183 @@ export class OrdersService {
         return paginate<Order>(qb, options);
     }
 
+    async processOrder(buyOrder: Order, sellOrder: Order): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const buyerAmount = buyOrder.amountRemaining;
+                const sellerAmount = sellOrder.amountRemaining;
+
+                const now = (new Date()).getTime();
+
+                const toReturn = {
+                    matched: false,
+                    buyExpired: false,
+                    sellExpired: false,
+                    toBuy: 0,
+                    toSell: 0,
+                    buyOrder: buyOrder,
+                    sellOrder: sellOrder
+                };
+
+
+                if (buyOrder.goodUntil > 0 && buyOrder.goodUntil < now) {
+                    toReturn.buyExpired = true;
+                }
+
+                if (sellOrder.goodUntil > 0 && sellOrder.goodUntil < now) {
+                    toReturn.sellExpired = true;
+                }
+
+                if (buyOrder.price >= sellOrder.price && (toReturn.buyExpired === false && toReturn.sellExpired === false)) {
+                    if (buyerAmount === sellerAmount) {
+                        resolve(await this.processOrderSameAmount(toReturn, buyOrder, sellOrder));
+                    } else if (buyerAmount > sellerAmount && buyOrder.orderStrategy !== OrderStrategy.ALL_OR_NOTHING) {
+                        resolve(await this.processOrderBuyPartial(toReturn, buyOrder, sellOrder));
+                    } else if (buyerAmount < sellerAmount && sellOrder.orderStrategy !== OrderStrategy.ALL_OR_NOTHING) {
+                        resolve(await this.processOrderSellPartial(toReturn, buyOrder, sellOrder));
+                    }
+                } else if (sellOrder.orderStrategy === OrderStrategy.MARKET_ORDER && toReturn.sellExpired == false) {
+                    if (buyerAmount === sellerAmount) {
+                        resolve(await this.processOrderSameAmount(toReturn, buyOrder, sellOrder));
+                    } else if (buyerAmount > sellerAmount && buyOrder.orderStrategy !== OrderStrategy.ALL_OR_NOTHING) {
+                        resolve(await this.processOrderBuyPartial(toReturn, buyOrder, sellOrder));
+                    } else if (buyerAmount < sellerAmount) {
+                        resolve(await this.processOrderSellPartial(toReturn, buyOrder, sellOrder));
+                    }
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async processOrderBuyPartial(toReturn: any, buyOrder: Order, sellOrder: Order): Promise<any> {
+        this.logger.debug("Processing Order Buy Partial");
+        toReturn.toBuy = buyOrder.amountRemaining;
+        toReturn.toSell = sellOrder.amountRemaining;
+        buyOrder.amountRemaining = buyOrder.amountRemaining - sellOrder.amountRemaining;
+        sellOrder.amountRemaining = 0;
+        sellOrder.status = OrderStatus.MATCHED;
+        const bo = await this.orderRepository.save(buyOrder);
+        const so = await this.orderRepository.save(sellOrder);
+        toReturn.buyOrder = bo;
+        toReturn.sellOrder = so;
+
+        //this.ethereumService.matchOrder(buyOrder.key, sellOrder.key, sellOrder.amountRemaining);
+        return toReturn;
+    }
+
+    async processOrderSellPartial(toReturn: any, buyOrder: Order, sellOrder: Order): Promise<any> {
+        this.logger.debug("Processing Order Sell Partial");
+        toReturn.toBuy = buyOrder.amountRemaining;
+        toReturn.toSell = sellOrder.amountRemaining;
+        sellOrder.amountRemaining = sellOrder.amountRemaining - buyOrder.amountRemaining;
+        buyOrder.amountRemaining = 0
+        buyOrder.status = OrderStatus.MATCHED;
+        const bo = await this.orderRepository.save(buyOrder);
+        const so = await this.orderRepository.save(sellOrder);
+        toReturn.buyOrder = bo;
+        toReturn.sellOrder = so;
+
+        //this.ethereumService.matchOrder(buyOrder.key, sellOrder.key, buyOrder.amountRemaining);
+        return toReturn;
+    }
+
+    async processOrderSameAmount(toReturn: any, buyOrder: Order, sellOrder: Order): Promise<any> {
+        this.logger.debug("Processing Order Same Amount");
+        toReturn.toBuy = buyOrder.amountRemaining;
+        toReturn.toSell = sellOrder.amountRemaining;
+        toReturn.matched = true;
+        sellOrder.amountRemaining = 0;
+        buyOrder.amountRemaining = 0;
+        sellOrder.status = OrderStatus.MATCHED;
+        buyOrder.status = OrderStatus.MATCHED;
+        const bo = await this.orderRepository.save(buyOrder);
+        const so = await this.orderRepository.save(sellOrder);
+        toReturn.buyOrder = bo;
+        toReturn.sellOrder = so;
+
+        //this.ethereumService.matchOrder(buyOrder.key, sellOrder.key, buyOrder.amountRemaining);
+        return toReturn;
+    }
+
+    async matchOrder(mOrder: Order): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let or = await this.orderRepository.findOne(mOrder.id);
+                // get 1K orders
+                const orderList = await this.orderRepository.createQueryBuilder("order")
+                    .where("status = :status", { status: OrderStatus.NEW })
+                    .getMany();
+                let matched = false;
+                for (let order of orderList) {
+                    this.logger.debug(order);
+                    this.logger.debug(`isMatched: ${matched}`);
+                    this.logger.debug(`amountRemaining: ${or.amountRemaining}`);
+
+                    if (matched) {
+                        break;
+                    }
+
+                    if (or.amountRemaining === 0) {
+                        break;
+                    }
+
+                    const tokenIdEquals = or.tokenId === order.tokenId;
+                    const isSameType = or.orderType === order.orderType;
+                    let buyerIsSeller = false;
+                    const address0 = "0x0000000000000000000000000000000000000000";
+                    if (or.seller !== address0 && order.buyer !== address0) {
+                        buyerIsSeller = or.seller === order.buyer;
+                    } else if (or.buyer != address0 && order.seller != address0) {
+                        buyerIsSeller = or.buyer === order.seller;
+                    }
+
+                    const sameMarketType = or.orderStrategy === order.orderStrategy;
+
+                    const shouldProcess = tokenIdEquals &&
+                        or.status === OrderStatus.NEW &&
+                        order.status === OrderStatus.NEW &&
+                        !isSameType &&
+                        sameMarketType &&
+                        !buyerIsSeller;
+
+                    this.logger.debug(`tokenIdEquals: ${tokenIdEquals}, isNew: ${or.status === OrderStatus.NEW}, isSameType: ${isSameType}, sameMarketType: ${sameMarketType}, buyerIsSeller: ${buyerIsSeller}, shouldProcess: ${shouldProcess}`);
+
+                    if (shouldProcess) {
+                        var buyOrder: Order;
+                        var sellOrder: Order;
+
+                        if (or.orderType === OrderType.BUY) {
+                            buyOrder = or;
+                            sellOrder = order;
+                            const toReturn = await this.processOrder(buyOrder, sellOrder);
+                            matched = toReturn.matched;
+                            or = await this.orderRepository.findOne(or.id);
+                        } else if (or.orderType === OrderType.SELL) {
+                            sellOrder = or;
+                            buyOrder = order;
+                            const toReturn = await this.processOrder(buyOrder, sellOrder);
+                            matched = toReturn.matched;
+                            or = await this.orderRepository.findOne(or.id);
+                        }
+                    }
+                }
+
+                resolve(true);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async postOrder(or: OrderRequest, isIssue: boolean): Promise<Order> {
         return new Promise(async (resolve, reject) => {
             try {
                 const key = Utils.getKey(or);
                 or.key = key;
+                //or.orderId = undefined;
 
                 const poster = await this.userRepository.findOne(or.userId);
                 const posterAddress = this.ethereumService.getAddressFromEncryptedPK(poster.passphrase);
@@ -159,65 +331,47 @@ export class OrdersService {
                         resolve(buyOrder);
                     }
                 } else {
-
-                    if (or.orderId !== undefined) {
-                        const dbOrder: Order = await this.orderRepository.findOne(or.orderId);
-                        if (dbOrder === undefined) {
-                            reject(`Order with id ${or.orderId} not found`);
-                        } else {
-                            await this.ethereumService.buy(or.amount, dbOrder.key, or.market, poster);
-                            const updatedOrder = await this.ethereumService.getOrder(dbOrder.key);
-                            updatedOrder.id = dbOrder.id;
-                            updatedOrder.issuerIsSeller = dbOrder.issuerIsSeller;
-                            updatedOrder.orderIsCancelled = dbOrder.orderIsCancelled;
-                            this.orderRepository.save(updatedOrder);
-
-                            this.saveUserAsset(or.tokenId, poster);
-                            this.movePrice(updatedOrder);
-                            this.smsService.sendSMS(poster.phoneNumber, `Order for ${or.amount} Placed for asset ${or.tokenId}`);
-
-                            resolve(dbOrder);
-                        }
-                    } else {
-                        if (poster === undefined) {
-                            reject(`User with id: ${or.userId} not found`);
-                        }
-
-                        this.logger.debug(`Order Type: ${OrderType[or.orderType]}`);
-                        if (OrderType[or.orderType] === 'BUY') {
-                            const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
-                            const needed = or.amount * or.price;
-                            if (balance < needed) {
-                                reject(`Wallet balance is too low for this transaction.`);
-                            }
-                        } else if (OrderType[or.orderType] === 'SELL') {
-                            const balance = await this.ethereumService.getOwnedShares(or.tokenId, posterAddress.address);
-                            if (balance < or.amount) {
-                                reject(`You don't have enough tokens for this transaction.`);
-                            }
-                        }
-
-                        if (or.orderStrategy === OrderStrategy.MARKET_ORDER) {
-                            or.orderStrategy = OrderStrategy.GOOD_TILL_CANCEL;
-                            or.price = asset.marketPrice;
-                        }
-
-                        await this.ethereumService.postOrder(or, poster);
-                        let order = await this.ethereumService.getOrder(key);
-                        if (or.orderType === OrderType.SELL && isIssue) {
-                            order.issuerIsSeller = isIssue;
-                        } else {
-                            order.issuerIsSeller = false;
-                        }
-                        order = await this.orderRepository.save(order);
-
-                        this.saveUserAsset(or.tokenId, poster);
-
-                        this.movePrice(order);
-                        this.smsService.sendSMS(poster.phoneNumber, `Order for ${or.amount} Placed for asset ${or.tokenId}`);
-
-                        resolve(order);
+                    if (poster === undefined) {
+                        reject(`User with id: ${or.userId} not found`);
                     }
+
+                    this.logger.debug(`Order Type: ${OrderType[or.orderType]}`);
+                    if (OrderType[or.orderType] === 'BUY') {
+                        const balance = await this.ethereumService.getWalletBalance(posterAddress.address);
+                        const needed = or.amount * or.price;
+                        if (balance < needed) {
+                            reject(`Wallet balance is too low for this transaction.`);
+                        }
+                    } else if (OrderType[or.orderType] === 'SELL') {
+                        const balance = await this.ethereumService.getOwnedShares(or.tokenId, posterAddress.address);
+                        if (balance < or.amount) {
+                            reject(`You don't have enough tokens for this transaction.`);
+                        }
+                    }
+
+                    if (or.orderStrategy === OrderStrategy.MARKET_ORDER) {
+                        or.orderStrategy = OrderStrategy.GOOD_TILL_CANCEL;
+                        or.price = asset.marketPrice;
+                    }
+
+                    await this.ethereumService.postOrder(or, poster);
+                    let order = await this.ethereumService.getOrder(key);
+                    if (or.orderType === OrderType.SELL && isIssue) {
+                        order.issuerIsSeller = isIssue;
+                    } else {
+                        order.issuerIsSeller = false;
+                    }
+
+                    order = await this.orderRepository.save(order);
+
+                    this.saveUserAsset(or.tokenId, poster);
+
+                    this.smsService.sendSMS(poster.phoneNumber, `Order for ${or.amount} Placed for asset ${or.tokenId}`);
+
+                    this.logger.debug('Running Order Matching');
+                    this.matchOrder(order);
+
+                    resolve(order);
                 }
             } catch (error) {
                 reject(error);

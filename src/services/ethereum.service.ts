@@ -123,7 +123,7 @@ export class EthereumService {
                 reject(error);
             }
         });
-    }    
+    }
 
     getOrder(key: string): Promise<Order> {
         return new Promise(async (resolve, reject) => {
@@ -213,6 +213,34 @@ export class EthereumService {
                 transaction.sign(poster.privateKey);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async matchOrder(order1Key: string, order2Key: string, amount: number): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await NonceManager.getNonce(this.contractor);
+                this.logger.debug(`Transaction Count: ${nonce}`);
+
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.matchOrder(order1Key, order2Key, amount).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                this.logger.debug(rawTransaction);
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                //const transaction = new Transaction(rawTransaction, { chain:  3});
+                transaction.sign(this.contractorPK);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);                
             } catch (error) {
                 reject(error);
             }
