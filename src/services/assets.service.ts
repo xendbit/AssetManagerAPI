@@ -14,6 +14,7 @@ import { Asset } from 'src/models/asset.model';
 import { ImageService } from './image.service';
 import { OrdersService } from './orders.service';
 import { UserAssets } from 'src/models/user.assets.model';
+import { NSEAssetRequest } from 'src/request.objects/nse.asset.request';
 
 @Injectable()
 export class AssetsService {
@@ -71,7 +72,7 @@ export class AssetsService {
 
         const qb = this.assetRepository.createQueryBuilder("asset")
             .leftJoin(UserAssets, "userAssets", "asset.id = userAssets.asset_id")
-            .where("userAssets.user_id = :uid", {uid: ownerUser.id});
+            .where("userAssets.user_id = :uid", { uid: ownerUser.id });
 
         return paginate<Asset>(qb, options);
     }
@@ -79,6 +80,77 @@ export class AssetsService {
     async listAssets(options: IPaginationOptions): Promise<Pagination<Asset>> {
         const qb = this.assetRepository.createQueryBuilder("asset").groupBy("tokenId");
         return paginate<Asset>(qb, options);
+    }
+
+    async createNseAsset(ar: NSEAssetRequest): Promise<NSEAssetRequest> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const issuerUser: User = await this.userRepository.createQueryBuilder("user").where("email = :email", { email: ar.issuerEmail }).getOne();
+                if (issuerUser === undefined) {
+                    throw new Error(`Issuer with email ${ar.issuerEmail} not found`);
+                }
+
+                const issuerAddress = await this.ethereumService.getAddressFromEncryptedPK(issuerUser.passphrase);
+
+                const asset = await this.assetRepository.createQueryBuilder("asset")
+                    .where("symbol = :symbol", { symbol: ar.artSymbol })
+                    .andWhere("issuer = :issuer", { issuer: issuerAddress.address })
+                    .getOne();
+
+                if (asset !== undefined) {
+                    reject('Asset with name and issuer already exists');
+                } else {
+                    const tokenId = ar.artId;
+                    const assetRequest: AssetRequest = {
+                        artistName: ar.artistName,
+                        tokenId: tokenId,
+                        brokerId: '0',
+                        commission: 0,
+                        createdOn: 0,
+                        description: ar.artDescription,
+                        image: '11111111111',
+                        issuer: issuerAddress.address,
+                        issuerId: issuerUser.id,
+                        issuingPrice: ar.pricePerToken,
+                        nameOfOwners: undefined,
+                        price: ar.pricePerToken,
+                        sharesAvailable: ar.numberOfTokensForSale,
+                        symbol: ar.artSymbol,
+                        titleOfWork: ar.artTitle,
+                        totalSupply: ar.numberOfTokens,
+                        listImmediately: true
+                    }
+                    const result = await this.ethereumService.issueToken(assetRequest);
+                    const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
+                    const asset: Asset = {
+                        tokenId: tokenId,
+                        issuer: issuerAddress.address,
+                        imageUrl: '',
+                        approved: 0,
+                        owner: tokenShares.owner,
+                        sharesContract: tokenShares.sharesContract,
+                        market: Market.PRIMARY,
+                        marketPrice: assetRequest.issuingPrice,
+                        ...assetRequest
+                    };
+
+                    this.logger.debug(`Asset ${assetRequest.symbol} minted by transaction ${result}`);
+                    asset.image = ""; // clear out the image
+                    //transferTokenOwnership
+                    const dbAsset = await this.assetRepository.save(asset);
+
+                    if (assetRequest.listImmediately !== undefined && assetRequest.listImmediately === true) {
+                        this.changeApprovalStatus(tokenId, true).then(changed => {
+                            this.logger.debug("Asset Status Changed");
+                        });
+                    }
+
+                    resolve(ar);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     async issueAsset(ar: AssetRequest): Promise<Asset> {
@@ -89,7 +161,7 @@ export class AssetsService {
                     throw new Error(`Issuer with id ${ar.issuerId} not found`);
                 }
 
-                if(ar.sharesAvailable > ar.totalSupply) {
+                if (ar.sharesAvailable > ar.totalSupply) {
                     reject("Available shares can not be greater than total supply");
                 }
 
@@ -174,7 +246,7 @@ export class AssetsService {
                             }
 
                             asset = await this.assetRepository.save(asset);
-                            await this.ordersService.postOrder(or, true);                            
+                            await this.ordersService.postOrder(or, true);
                         } else {
                             asset.approved = 0;
                             asset.market = Market.DECLINED;

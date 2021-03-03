@@ -7,6 +7,7 @@ import { Response, ResponseUtils } from 'src/utils';
 import { AssetRequest } from 'src/request.objects/asset-request';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { OrdersService } from 'src/services/orders.service';
+import { NSEAssetRequest } from 'src/request.objects/nse.asset.request';
 
 @Controller('/assets')
 @ApiTags('asset-manager')
@@ -16,12 +17,21 @@ export class AssetsController {
         private ordersService: OrdersService,
     ) { }
 
+
     @Post('issue-asset')
     @Roles('admin')
     @ApiSecurity('api-key')
     async createNewAsset(@Body() asset: AssetRequest): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.assetsService.issueAsset(asset));
     }
+
+    
+    @Post('create-asset')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async createNseAsset(@Body() asset: NSEAssetRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.assetsService.createNseAsset(asset));
+    }    
 
     @Get('by-token-id/:tokenId')
     async findAssetByTokenId(@Param("tokenId") tokenId: number): Promise<Response> {
