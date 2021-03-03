@@ -83,4 +83,14 @@ export abstract class AssetBaseClass {
 
     @ApiProperty()
     listImmediately?: boolean = false;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    creationYear: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    @Column()
+    value: string;
 }

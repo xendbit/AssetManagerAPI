@@ -24,6 +24,18 @@ export class NSEAssetRequest {
 
     @ApiProperty()
     @IsNotEmpty()
+    artCreationYear: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    artValue: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
+    artPicture: string;
+
+    @ApiProperty()
+    @IsNotEmpty()
     pricePerToken: number;
 
     @ApiProperty()

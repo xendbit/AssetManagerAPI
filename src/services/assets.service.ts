@@ -108,7 +108,7 @@ export class AssetsService {
                         commission: 0,
                         createdOn: 0,
                         description: ar.artDescription,
-                        image: '11111111111',
+                        image: ar.artPicture,
                         issuer: issuerAddress.address,
                         issuerId: issuerUser.id,
                         issuingPrice: ar.pricePerToken,
@@ -118,7 +118,9 @@ export class AssetsService {
                         symbol: ar.artSymbol,
                         titleOfWork: ar.artTitle,
                         totalSupply: ar.numberOfTokens,
-                        listImmediately: true
+                        listImmediately: true,
+                        creationYear: ar.artCreationYear,
+                        value: ar.artValue
                     }
                     const result = await this.ethereumService.issueToken(assetRequest);
                     const tokenShares: TokenShares = await this.ethereumService.getTokenShares(tokenId);
