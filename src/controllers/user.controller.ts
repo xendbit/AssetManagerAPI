@@ -6,6 +6,7 @@ import { Response, ResponseUtils } from 'src/utils';
 import { UserRequest } from 'src/request.objects/user.request';
 import { LoginRequest } from 'src/request.objects/login.request';
 import { PasswordResetRequest } from 'src/request.objects/password.reset.request';
+import { NseUserRequest } from 'src/request.objects/nse.user.request';
 
 @ApiTags('user')
 @Controller('user')
@@ -42,6 +43,13 @@ export class UserController {
     async newUser(@Body() uro: UserRequest): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.getNewAddress(uro));
     }
+
+    @Post('new-nse-user')
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    async newNseUser(@Body() uro: NseUserRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.createNseUser(uro));
+    }    
 
     @Post('login')
     @Roles('admin')

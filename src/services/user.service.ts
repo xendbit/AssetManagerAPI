@@ -16,6 +16,7 @@ import { Address, EthereumService } from './ethereum.service';
 import { ProvidusBankService } from './providus-bank.service';
 import { generateMnemonic } from 'bip39';
 import { ImageService } from './image.service';
+import { NseUserRequest } from 'src/request.objects/nse.user.request';
 
 @Injectable()
 export class UserService {
@@ -246,6 +247,59 @@ export class UserService {
         }
 
         return "Can not find confirmation link.";
+    }
+
+    async createNseUser(ur: NseUserRequest): Promise<NseUserRequest> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const salt = genSaltSync(12, 'a');
+                const passwordHashed = hashSync(ur.email + ur.phone, salt);
+                const passphraseHashed = AES.encrypt(passwordHashed, process.env.KEY).toString();
+
+                let dbUser: User = await this.userRepository.createQueryBuilder("user")
+                    .where("email = :email", { "email": ur.email })
+                    .getOne();
+
+                if (dbUser !== undefined) {
+                    throw Error("User with email address already exists");
+                }
+
+                let ngncAccountNumber = "0000000000";
+                // if (uro.role !== Role.ADMIN && uro.bvn !== "11111111111" && +uro.bvn !== 11111111111) {
+                //     ngncAccountNumber = await this.providusService.createBankAccount(uro.bvn, uro.firstName, uro.lastName, uro.middleName, uro.email); //"9972122390";
+                // }
+
+                let imageUrl = '';
+
+                const user: User = {
+                    password: passwordHashed,
+                    passphrase: passphraseHashed,
+                    email: ur.email,
+                    role: 0,
+                    bvn: '11111111111',
+                    ngncAccountNumber: ngncAccountNumber,
+                    firstName: '',
+                    middleName: '',
+                    lastName: '',
+                    imageUrl: imageUrl,
+                    activated: false,
+                    approved: false,
+                    userId: ur.userId,
+                    phoneNumber: ur.phone,
+                    address: ''
+                }
+
+                dbUser = await this.userRepository.save(user);
+                const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
+                // TODO: give everyone 500K after registration. Remove this in production
+                // TODO: Remove this in production
+                // this.ethereumService.fundWallet(address.address, 500000);
+                this.emailService.sendConfirmationEmail(dbUser);
+                resolve(ur);                
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     async getNewAddress(uro: UserRequest): Promise<User> {
