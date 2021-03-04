@@ -62,7 +62,7 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const sharesRemaining = await contract.methods.escrowBalance(tokenId).call();
-                resolve(sharesRemaining);
+                resolve(sharesRemaining / (10 ** 2));
             } catch (error) {
                 reject(error);
             }
@@ -132,13 +132,13 @@ export class EthereumService {
                 const blOrder = await contract.methods.getOrder(key).call();
                 this.logger.debug(blOrder);
                 const order: Order = {
-                    amountRemaining: blOrder[6],
+                    amountRemaining: (blOrder[6] / (10 ** 2)),
                     buyer: blOrder[4],
                     goodUntil: blOrder[10] * 1000,
                     key: key,
                     orderStrategy: blOrder[2],
                     orderType: blOrder[1],
-                    originalAmount: blOrder[7],
+                    originalAmount: (blOrder[7] / (10 ** 2)),
                     price: blOrder[8],
                     seller: blOrder[3],
                     status: blOrder[9],
@@ -162,6 +162,7 @@ export class EthereumService {
                 const nonce: number = await NonceManager.getNonce(poster.address);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
 
+                amount = amount * (10**2);
                 const rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
@@ -198,7 +199,7 @@ export class EthereumService {
                     data: contract.methods.postOrder(
                         or.orderType,
                         or.orderStrategy,
-                        or.amount,
+                        (or.amount * 10**2),
                         or.price,
                         or.tokenId,
                         or.goodUntil,
@@ -226,6 +227,7 @@ export class EthereumService {
                 this.logger.debug(`Transaction Count: ${nonce}`);
 
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
+                amount = amount * (10**2);
                 const rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
@@ -240,7 +242,7 @@ export class EthereumService {
                 //const transaction = new Transaction(rawTransaction, { chain:  3});
                 transaction.sign(this.contractorPK);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
-                resolve(reciept.transactionHash);                
+                resolve(reciept.transactionHash);
             } catch (error) {
                 reject(error);
             }
@@ -260,10 +262,39 @@ export class EthereumService {
                     sharesContract: res["2"],
                     symbol: res["4"],
                     tokenId: res["0"],
-                    totalSupply: res["5"],
+                    totalSupply: (res["5"] / 10**2),
                     approved: 0
                 }
                 resolve(tokenShares);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async transferShares(from: User, tokenId: number, to: string, amount: number): Promise<string> {
+        this.logger.debug(`Trasfering Shares of ${tokenId} to ${to}`);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const poster = this.getAddressFromEncryptedPK(from.passphrase);
+                const nonce: number = await NonceManager.getNonce(poster.address);
+                const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: poster.address });
+
+                amount = amount * (10**2);
+                const rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    to: this.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.transferShares(tokenId, to, amount).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }                
+
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
+                transaction.sign(poster.privateKey);
+                this.logger.debug(transaction.serialize().toString('hex'));
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
             } catch (error) {
                 reject(error);
             }
@@ -313,7 +344,7 @@ export class EthereumService {
                     data: contract.methods.mint(
                         ar.tokenId,
                         ar.symbol,
-                        ar.totalSupply,
+                        (ar.totalSupply * 10**2),
                         this.web3.utils.toHex(ar.issuingPrice + ''),
                         ar.issuer,
                         ar.image
@@ -356,7 +387,7 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const balance = await contract.methods.ownedShares(tokenId, address).call();
-                resolve(balance);
+                resolve(balance / 10**2);
             } catch (error) {
                 reject(error);
             }
@@ -368,7 +399,7 @@ export class EthereumService {
             try {
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
                 const balance = await contract.methods.walletBalance(address).call();
-                resolve(balance);
+                resolve(balance / 10**2);
             } catch (error) {
                 reject(error);
             }
@@ -382,6 +413,7 @@ export class EthereumService {
                 const nonce: number = await NonceManager.getNonce(this.contractor);
                 const contract = new this.web3.eth.Contract(this.abi, this.contractAddress, { from: this.contractor });
 
+                amount = amount * (10**2);
                 const rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),

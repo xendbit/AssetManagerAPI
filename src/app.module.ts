@@ -32,12 +32,13 @@ import { MarketSettings } from './models/market.settings.model';
 import { HolidaysService } from './services/holidays.service';
 import { HolidaysController } from './controllers/holidays.controller';
 import { Holiday } from './models/holidays.model';
+import { Trade } from './models/trade.model';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees, MarketSettings, Holiday]),
+    TypeOrmModule.forFeature([User, Asset, Order, PasswordReset, UserAssets, Fees, MarketSettings, Holiday, Trade]),
     MailerModule.forRoot({  
       transport: process.env.EMAIL_URL,
       defaults: {

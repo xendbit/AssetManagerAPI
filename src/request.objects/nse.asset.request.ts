@@ -28,7 +28,7 @@ export class NSEAssetRequest {
 
     @ApiProperty()
     @IsNotEmpty()
-    artValue: string;
+    artValue: number;
 
     @ApiProperty()
     @IsNotEmpty()
@@ -48,5 +48,5 @@ export class NSEAssetRequest {
 
     @ApiProperty()
     @IsNotEmpty()
-    issuerEmail: number;    
+    issuerEmail: string;    
 }

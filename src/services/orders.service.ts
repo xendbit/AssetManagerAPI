@@ -12,6 +12,8 @@ import { Repository } from 'typeorm';
 import { Address, EthereumService } from './ethereum.service';
 import { SmsService } from './sms.service';
 import { MarketSettingsService } from './market-settings.service';
+import { TradeRequest } from 'src/request.objects/trade.request';
+import { Trade } from 'src/models/trade.model';
 
 @Injectable()
 export class OrdersService {
@@ -24,6 +26,8 @@ export class OrdersService {
     private assetRepository: Repository<Asset>
     @InjectRepository(UserAssets)
     private userAssetsRepository: Repository<UserAssets>
+    @InjectRepository(Trade)
+    private tradeRepository: Repository<Trade>
 
     private readonly logger = new Logger(OrdersService.name);
 
@@ -46,6 +50,38 @@ export class OrdersService {
                     this.orderRepository.save(order);
                     resolve(order);
                 }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async trade(tro: TradeRequest): Promise<TradeRequest> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const buyer: User = await this.userRepository.createQueryBuilder("user").where("email = :email", { email: tro.buyerEmail }).getOne();
+                const seller: User = await this.userRepository.createQueryBuilder("user").where("email = :email", { email: tro.sellerEmail }).getOne();
+
+                const asset = await this.assetRepository.createQueryBuilder("asset").where("symbol = :sym", {sym: tro.assetSymbol}).getOne();
+
+                const buyerAddress = this.ethereumService.getAddressFromEncryptedPK(buyer.passphrase);
+
+                if (buyer === undefined) {
+                    reject(`Buyer with email ${tro.buyerEmail} not found`);
+                }
+
+                if (seller === undefined) {
+                    reject(`Seller with email ${tro.sellerEmail} not found`);
+                }
+
+                const totalBought = tro.numberOfTradeTokens;
+
+                await this.ethereumService.transferShares(seller, asset.tokenId, buyerAddress.address, totalBought);
+                
+                let trade: Trade = { ...tro };
+                trade = await this.tradeRepository.save(trade);
+                                
+                resolve(tro);
             } catch (error) {
                 reject(error);
             }
@@ -213,6 +249,8 @@ export class OrdersService {
                 // get 1K orders
                 const orderList = await this.orderRepository.createQueryBuilder("order")
                     .where("status = :status", { status: OrderStatus.NEW })
+                    .andWhere("tokenId = :ti", {ti: or.tokenId})
+                    .andWhere("id != :id", {id: or.id})
                     .getMany();
                 let matched = false;
                 for (let order of orderList) {

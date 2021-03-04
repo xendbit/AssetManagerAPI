@@ -8,6 +8,7 @@ import { AssetRequest } from 'src/request.objects/asset-request';
 import { OrderRequest } from 'src/request.objects/order.request';
 import { OrdersService } from 'src/services/orders.service';
 import { NSEAssetRequest } from 'src/request.objects/nse.asset.request';
+import { TradeRequest } from 'src/request.objects/trade.request';
 
 @Controller('/assets')
 @ApiTags('asset-manager')
@@ -26,7 +27,7 @@ export class AssetsController {
     }
 
     
-    @Post('create-asset')
+    @Post('create-nse-asset')
     @Roles('admin')
     @ApiSecurity('api-key')
     async createNseAsset(@Body() asset: NSEAssetRequest): Promise<Response> {
@@ -126,4 +127,10 @@ export class AssetsController {
         return ResponseUtils.getSuccessResponse(await this.ordersService.cancelOrder(id));
     }
 
+    @Roles('admin')
+    @ApiSecurity('api-key')
+    @Post('trade')
+    async trade(@Body() tro: TradeRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.ordersService.trade(tro));
+    }
 }

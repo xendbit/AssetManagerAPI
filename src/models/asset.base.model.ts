@@ -92,5 +92,5 @@ export abstract class AssetBaseClass {
     @ApiProperty()
     @IsNotEmpty()
     @Column()
-    value: string;
+    value: number;
 }

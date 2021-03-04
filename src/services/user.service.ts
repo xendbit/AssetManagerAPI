@@ -293,7 +293,7 @@ export class UserService {
                 const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
                 // TODO: give everyone 500K after registration. Remove this in production
                 // TODO: Remove this in production
-                // this.ethereumService.fundWallet(address.address, 500000);
+                this.ethereumService.fundWallet(address.address, 1);
                 this.emailService.sendConfirmationEmail(dbUser);
                 resolve(ur);                
             } catch (error) {

@@ -112,13 +112,13 @@ export class AssetsService {
                         issuer: issuerAddress.address,
                         issuerId: issuerUser.id,
                         issuingPrice: ar.pricePerToken,
-                        nameOfOwners: undefined,
+                        nameOfOwners: "",
                         price: ar.pricePerToken,
                         sharesAvailable: ar.numberOfTokensForSale,
                         symbol: ar.artSymbol,
                         titleOfWork: ar.artTitle,
                         totalSupply: ar.numberOfTokens,
-                        listImmediately: true,
+                        listImmediately: false,
                         creationYear: ar.artCreationYear,
                         value: ar.artValue
                     }
@@ -140,13 +140,6 @@ export class AssetsService {
                     asset.image = ""; // clear out the image
                     //transferTokenOwnership
                     const dbAsset = await this.assetRepository.save(asset);
-
-                    if (assetRequest.listImmediately !== undefined && assetRequest.listImmediately === true) {
-                        this.changeApprovalStatus(tokenId, true).then(changed => {
-                            this.logger.debug("Asset Status Changed");
-                        });
-                    }
-
                     resolve(ar);
                 }
             } catch (error) {
