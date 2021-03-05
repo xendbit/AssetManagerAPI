@@ -49,4 +49,6 @@ export class NSEAssetRequest {
     @ApiProperty()
     @IsNotEmpty()
     issuerEmail: string;    
+
+    blockchainUrl?: string;
 }

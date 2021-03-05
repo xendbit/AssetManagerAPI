@@ -140,6 +140,7 @@ export class AssetsService {
                     asset.image = ""; // clear out the image
                     //transferTokenOwnership
                     const dbAsset = await this.assetRepository.save(asset);
+                    ar.blockchainUrl = `https://blockscout.com/poa/sokol/tokens/${process.env.CONTRACT_ADDRESS}/instance/${ar.artId}/token-transfers`;
                     resolve(ar);
                 }
             } catch (error) {
