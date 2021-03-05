@@ -271,14 +271,23 @@ export class UserService {
 
                 let imageUrl = '';
 
+                let role: Role = Role.ISSUER;
+                if (ur.userType.toLocaleLowerCase() === 'broker') {
+                    role = Role.BROKER;
+                } else if (ur.userType.toLocaleLowerCase() === 'issuer') {
+                    role = Role.ISSUER;
+                } else if (ur.userType.toLocaleLowerCase() === 'investor') {
+                    role = Role.INVESTOR;
+                }
+
                 const user: User = {
                     password: passwordHashed,
                     passphrase: passphraseHashed,
                     email: ur.email,
-                    role: 0,
+                    role: role,
                     bvn: '11111111111',
                     ngncAccountNumber: ngncAccountNumber,
-                    firstName: '',
+                    firstName: ur.userName,
                     middleName: '',
                     lastName: '',
                     imageUrl: imageUrl,
@@ -295,7 +304,7 @@ export class UserService {
                 // TODO: Remove this in production
                 this.ethereumService.fundWallet(address.address, 1);
                 this.emailService.sendConfirmationEmail(dbUser);
-                resolve(ur);                
+                resolve(ur);
             } catch (error) {
                 reject(error);
             }

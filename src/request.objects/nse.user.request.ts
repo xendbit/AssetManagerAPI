@@ -13,4 +13,12 @@ export class NseUserRequest {
     @IsNotEmpty()
     @ApiProperty()
     phone: string;
+
+    @IsNotEmpty()
+    @ApiProperty()
+    userName: string;    
+
+    @IsNotEmpty()
+    @ApiProperty()
+    userType: string;    
 }
