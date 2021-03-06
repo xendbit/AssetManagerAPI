@@ -254,7 +254,7 @@ export class UserService {
             try {
                 const salt = genSaltSync(12, 'a');
                 const passwordHashed = hashSync(ur.email + ur.phone, salt);
-                const passphraseHashed = AES.encrypt(passwordHashed, process.env.KEY).toString();
+                const passphraseHashed = AES.encrypt(passwordHashed + ur.userName + ur.userId + ur.userType, process.env.KEY).toString();
 
                 let dbUser: User = await this.userRepository.createQueryBuilder("user")
                     .where("email = :email", { "email": ur.email })
@@ -295,11 +295,15 @@ export class UserService {
                     approved: false,
                     userId: ur.userId,
                     phoneNumber: ur.phone,
-                    address: ''
+                    address: '',
+                    blockchainAddress: ''
                 }
-
+                
                 dbUser = await this.userRepository.save(user);
+                
                 const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
+                dbUser.blockchainAddress = address.address;
+                await this.userRepository.save(dbUser);
                 // TODO: give everyone 500K after registration. Remove this in production
                 // TODO: Remove this in production
                 this.ethereumService.fundWallet(address.address, 1);
@@ -340,7 +344,7 @@ export class UserService {
                 if (uro.userId === undefined) {
                     uro.userId = 0;
                 }
-
+                
                 const user: User = {
                     password: passwordHashed,
                     passphrase: passphraseHashed,
@@ -356,11 +360,17 @@ export class UserService {
                     approved: false,
                     userId: uro.userId,
                     phoneNumber: uro.phoneNumber,
-                    address: uro.address
+                    address: uro.address,
+                    blockchainAddress: ''
                 }
-
+                
                 dbUser = await this.userRepository.save(user);
+
                 const address = this.ethereumService.getAddressFromEncryptedPK(dbUser.passphrase);
+
+                dbUser.blockchainAddress = address.address;
+                await this.userRepository.save(dbUser);                
+
                 // TODO: give everyone 500K after registration. Remove this in production
                 // TODO: Remove this in production
                 this.ethereumService.fundWallet(address.address, 500000);
