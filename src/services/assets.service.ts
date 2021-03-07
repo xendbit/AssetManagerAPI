@@ -95,10 +95,11 @@ export class AssetsService {
                 const asset = await this.assetRepository.createQueryBuilder("asset")
                     .where("symbol = :symbol", { symbol: ar.artSymbol })
                     .andWhere("issuer = :issuer", { issuer: issuerAddress.address })
+                    .orWhere("tokenId = :artId", {artId: ar.artId})
                     .getOne();
 
                 if (asset !== undefined) {
-                    reject('Asset with name and issuer already exists');
+                    reject('Asset with symbol, issuer or artId already exists');
                 } else {
                     const tokenId = ar.artId;
                     const assetRequest: AssetRequest = {
