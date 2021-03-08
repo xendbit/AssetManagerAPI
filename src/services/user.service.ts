@@ -278,6 +278,8 @@ export class UserService {
                     role = Role.ISSUER;
                 } else if (ur.userType.toLocaleLowerCase() === 'investor') {
                     role = Role.INVESTOR;
+                } else if (ur.userType.toLocaleLowerCase() === 'admin') {
+                    role = Role.ADMIN;
                 }
 
                 const user: User = {
