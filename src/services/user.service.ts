@@ -308,6 +308,7 @@ export class UserService {
                 // TODO: Remove this in production
                 this.ethereumService.fundWallet(address.address, 1);
                 this.emailService.sendConfirmationEmail(dbUser);
+                ur.blockchainAddress = address.address;
                 resolve(ur);
             } catch (error) {
                 reject(error);

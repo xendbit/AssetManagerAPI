@@ -21,4 +21,6 @@ export class NseUserRequest {
     @IsNotEmpty()
     @ApiProperty()
     userType: string;    
+
+    blockchainAddress?: string;
 }
