@@ -345,7 +345,7 @@ export class EthereumService {
                         ar.tokenId,
                         ar.symbol,
                         (ar.totalSupply * 10**2),
-                        this.web3.utils.toHex(ar.issuingPrice + ''),
+                        this.web3.utils.toHex(ar.issuingPrice * 10**2 + ''),
                         ar.issuer,
                         ar.image
                     ).encodeABI(),
