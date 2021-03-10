@@ -191,6 +191,8 @@ export class AssetsService {
                         sharesContract: tokenShares.sharesContract,
                         market: Market.PRIMARY,
                         marketPrice: ar.issuingPrice,
+                        creationYear: '2021',     
+                        value: ar.issuingPrice * ar.sharesAvailable,                   
                         ...ar
                     };
 
