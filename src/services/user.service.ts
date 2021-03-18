@@ -152,10 +152,10 @@ export class UserService {
 
     }
 
-    async getUserAssets(userId: number): Promise<Asset[]> {
+    async getUserAssets(email: string): Promise<Asset[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const dbUser = await this.userRepository.findOne(userId)
+                const dbUser: User = await this.userRepository.createQueryBuilder("user").where("email = :email", { email: email }).getOne();
                 if (dbUser !== undefined) {
                     const result = await this.assetRepository.query("SELECT a2.* from userAssets ua inner join asset a2 on a2.id  = ua.asset_id  where user_id = 9");
                     this.logger.debug(result);
