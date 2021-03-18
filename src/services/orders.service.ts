@@ -76,6 +76,14 @@ export class OrdersService {
 
                 const totalBought = tro.numberOfTradeTokens;
 
+                // check balance of seller
+                const address: Address = await this.ethereumService.getAddressFromEncryptedPK(seller.passphrase);
+                const balance: number = await this.ethereumService.getOwnedShares(asset.tokenId, address.address);
+
+                if(balance < tro.numberOfTradeTokens) {
+                    reject(`You don't have enough asset to complete this trade: ${balance}`);
+                }
+
                 await this.ethereumService.transferShares(seller, asset.tokenId, buyerAddress.address, totalBought);
                 
                 let trade: Trade = { ...tro };

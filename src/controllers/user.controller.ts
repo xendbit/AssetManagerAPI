@@ -98,4 +98,9 @@ export class UserController {
     async getUsersByType(@Param('role') role: number): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.userService.listUsersByRole(role));
     }
+
+    @Get('users-portfolio/:userId')
+    async getUserPortfolio(@Param('userId') userId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.getUserAssets(userId));
+    }    
 }

@@ -288,7 +288,7 @@ export class EthereumService {
                     value: "0x0",
                     data: contract.methods.transferShares(tokenId, to, amount).encodeABI(),
                     nonce: this.web3.utils.toHex(nonce),
-                }                
+                }
 
                 const transaction = new Transaction(rawTransaction, { common: this.chain });
                 transaction.sign(poster.privateKey);

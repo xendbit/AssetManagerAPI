@@ -17,6 +17,7 @@ import { ProvidusBankService } from './providus-bank.service';
 import { generateMnemonic } from 'bip39';
 import { ImageService } from './image.service';
 import { NseUserRequest } from 'src/request.objects/nse.user.request';
+import { Asset } from 'src/models/asset.model';
 
 @Injectable()
 export class UserService {
@@ -24,6 +25,8 @@ export class UserService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>
+    @InjectRepository(Asset)
+    private assetRepository: Repository<Asset>
 
     @InjectRepository(PasswordReset)
     private passwordResetRepository: Repository<PasswordReset>
@@ -31,9 +34,8 @@ export class UserService {
     constructor(
         private ethereumService: EthereumService,
         private emailService: EmailService,
-        private providusService: ProvidusBankService,
         private imageService: ImageService,
-    ) {
+    ) {        
     }
 
     async listUsers(options: IPaginationOptions): Promise<Pagination<User>> {
@@ -148,6 +150,25 @@ export class UserService {
             }
         });
 
+    }
+
+    async getUserAssets(userId: number): Promise<Asset[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dbUser = await this.userRepository.findOne(userId)
+                if (dbUser !== undefined) {
+                    const result = await this.assetRepository.query("SELECT a2.* from userAssets ua inner join asset a2 on a2.id  = ua.asset_id  where user_id = 9");
+                    this.logger.debug(result);
+                    resolve(result);
+                } else {
+                    throw Error('User with ID not found');
+                }
+
+                resolve(undefined);
+            } catch (error) {
+                reject(error);
+            }
+        });        
     }
 
     async ownedShares(tokenId: number, userId: number): Promise<number> {
