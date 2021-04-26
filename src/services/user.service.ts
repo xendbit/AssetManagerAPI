@@ -342,6 +342,8 @@ export class UserService {
     async getNewAddress(uro: UserRequest): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
+                uro.phoneNumber = '08089370313';
+                uro.address = 'Address 1';
                 const salt = genSaltSync(12, 'a');
                 const passwordHashed = hashSync(uro.password, salt);
                 const passphraseHashed = AES.encrypt(uro.passphrase, process.env.KEY).toString();

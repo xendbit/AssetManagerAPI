@@ -24,7 +24,7 @@ export abstract class UserBase {
     @ApiProperty()
     @IsNotEmpty()
     @Column()
-    phoneNumber: string;        
+    phoneNumber?: string;
 
     @ApiProperty()
     @IsNotEmpty()
@@ -62,5 +62,5 @@ export abstract class UserBase {
     @ApiProperty()
     @IsNotEmpty()
     @Column()
-    address: string    
+    address?: string;
 }
