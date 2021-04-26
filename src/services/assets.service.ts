@@ -153,6 +153,8 @@ export class AssetsService {
     async issueAsset(ar: AssetRequest): Promise<Asset> {
         return new Promise(async (resolve, reject) => {
             try {
+                ar.creationYear = '2021';
+                ar.value = ar.issuingPrice * ar.sharesAvailable;
                 const issuerUser: User = await this.userRepository.findOne(ar.issuerId);
                 if (issuerUser === undefined) {
                     throw new Error(`Issuer with id ${ar.issuerId} not found`);

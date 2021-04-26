@@ -85,12 +85,10 @@ export abstract class AssetBaseClass {
     listImmediately?: boolean = false;
 
     @ApiProperty()
-    @IsNotEmpty()
     @Column()
-    creationYear: string;
+    creationYear?: string;
 
     @ApiProperty()
-    @IsNotEmpty()
     @Column()
-    value: number;
+    value?: number;
 }
